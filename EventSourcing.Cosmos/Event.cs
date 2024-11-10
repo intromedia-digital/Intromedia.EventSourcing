@@ -8,17 +8,19 @@ internal sealed class Event
     public Guid Id { get; set; }
     public int Version { get; set; }
     public string Payload { get; set; }
-    public Event(Guid streamId, object @event) 
+    public Event(Guid streamId, IEvent @event) 
     {
         StreamId = streamId;
         Timestamp = DateTime.UtcNow;
         Id = Guid.NewGuid();
+        Version = @event.Version;
         Payload = JsonConvert.SerializeObject(@event, new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All,
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         });
     }
+    [JsonConstructor]
     private Event() { }
 }
 

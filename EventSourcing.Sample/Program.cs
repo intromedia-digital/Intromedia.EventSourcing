@@ -11,7 +11,7 @@ builder.Services.AddDbContext<PackageContext>(op =>
 
 builder.Services.AddEventSourcing()
     .AddHandlersFromAssemblyContaining<Program>()
-    .UseDbContext<PackageContext>()
+    //.UseDbContext<PackageContext>()
     .UseCosmos(
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
@@ -70,7 +70,7 @@ app.MapPost("packages/{packageId:guid}/begindelivery", async (Guid packageId, Pa
 app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosmos) =>
 {
     var container = cosmos.GetContainer("event-sourcing", "packages");
-    PackageState state = await container.ReadItemAsync<PackageState>(packageId.ToString(), new PartitionKey(packageId.ToString()));
+    PackageReadModel state = await container.ReadItemAsync<PackageReadModel>(packageId.ToString(), new PartitionKey(packageId.ToString()));
     return state is not null ? Results.Ok(state) : Results.NotFound();
 });
 

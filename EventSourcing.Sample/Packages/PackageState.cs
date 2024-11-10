@@ -15,6 +15,7 @@
                 Apply(e);
                 break;
         }
+        Version = @event.Version;
     }
     public Guid Id { get; set; }
     #endregion
@@ -22,6 +23,7 @@
     public Guid? CartId { get; set; }
     public DateTime? DeliveryStarted { get; set; }
     public int Version { get; set; } = 0;
+    public int NextVersion() => Version + 1;
     public void Apply(PackageReceived @event)
     {
         TrackingNumber = @event.TrackingNumber;

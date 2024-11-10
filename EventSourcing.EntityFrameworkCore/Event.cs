@@ -9,10 +9,11 @@ internal sealed class Event
     public int Version { get; set; }
     public string Payload { get; set; }
     public DateTime? Published { get; set; }
-    public Event(Guid streamId, object @event)
+    public Event(Guid streamId, IEvent @event)
     {
         StreamId = streamId;
         Timestamp = DateTime.UtcNow;
+        Version = @event.Version;
         Payload = JsonConvert.SerializeObject(@event, new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All,

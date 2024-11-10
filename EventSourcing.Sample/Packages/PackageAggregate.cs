@@ -39,7 +39,7 @@ internal sealed class PackageAggregate
         {
             PackageId = _state.Id,
             CartId = cartId,
-            Version = _state.Version
+            Version = _state.NextVersion()
         };
         _state.Apply(e);
         _events.Add(e);
@@ -50,7 +50,7 @@ internal sealed class PackageAggregate
         {
             PackageId = _state.Id,
             Timestamp = DateTime.UtcNow,
-            Version = _state.Version
+            Version = _state.NextVersion()
         };
         _state.Apply(e);
         _events.Add(e);
