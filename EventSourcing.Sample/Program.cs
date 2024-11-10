@@ -22,6 +22,8 @@ builder.Services.AddScoped<PackageRepository>();
 
 builder.Services.AddHostedService<Initializer>();
 
+builder.Services.AddHostedService<PackageProjection>();
+
 
 var app = builder.Build();
 
@@ -74,13 +76,57 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
     return state is not null ? Results.Ok(state) : Results.NotFound();
 });
 
-app.MapGet("carts/{cartId:guid}", async (Guid cartId, CosmosClient cosmos) =>
-{
-    var container = cosmos.GetContainer("event-sourcing", "carts");
-    Cart cart = await container.ReadItemAsync<Cart>(cartId.ToString(), new PartitionKey(cartId.ToString()));
-    return cart is not null ? Results.Ok(cart) : Results.NotFound();
-});
 
 #endregion
 
 app.Run();
+
+
+internal sealed class PackageContext : DbContext
+{
+    public PackageContext(DbContextOptions<PackageContext> options) : base(options)
+    {
+    }
+    public DbSet<PackageReadModel> Packages { get; set; }
+    public DbSet<Projection> Projections => Set<Projection>();
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Projection>(b =>
+        {
+            b.HasKey(p => p.Id);
+            b.Property(p => p.Name).IsRequired();
+            b.Property(p => p.StreamType).IsRequired();
+            b.Property(p => p.Offset).IsRequired().HasDefaultValue(0);
+
+            b.HasIndex(p => p.Name);
+            b.HasIndex(p => p.StreamType);
+        });
+
+        modelBuilder.Entity<PackageReadModel>(b =>
+        {
+            b.HasKey(p => p.Id);
+            b.Property(p => p.TrackingNumber).IsRequired();
+            b.Property(p => p.CartId);
+            b.Property(p => p.OutForDelivery);
+            b.Property(p => p.Version).IsRequired();
+        });
+
+    }
+}
+
+internal sealed class Projection
+{
+    public long Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string StreamType { get; set; } = string.Empty;
+    public int Offset { get; set; } = 0;
+    public Projection(string name, string streamType)
+    {
+        Name = name;
+        StreamType = streamType;
+    }
+    private Projection()
+    {
+    }
+}
+

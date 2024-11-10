@@ -6,3 +6,4 @@ public interface IState
     int NextVersion();
     void Apply(IEvent @event);
 }
+
