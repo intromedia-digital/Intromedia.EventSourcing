@@ -1,0 +1,29 @@
+@EventSouring_HostAddress = https://localhost:7033
+@PackageId = 36016795-3fda-42b0-bcd9-364218f43dc6
+@CartId = f58bc7d8-2c78-4ed6-bdd3-dec9c53bf95f
+
+
+###
+
+POST {{EventSouring_HostAddress}}/packages
+
+###
+
+POST {{EventSouring_HostAddress}}/packages/{{PackageId}}/load?cartId={{CartId}}
+Content-Type: application/json
+
+###
+
+GET {{EventSouring_HostAddress}}/packages/{{PackageId}}
+
+###
+
+POST {{EventSouring_HostAddress}}/packages/{{PackageId}}/begindelivery
+Content-Type: application/json
+
+
+###
+
+GET {{EventSouring_HostAddress}}/carts/{{CartId}}
+
+###
