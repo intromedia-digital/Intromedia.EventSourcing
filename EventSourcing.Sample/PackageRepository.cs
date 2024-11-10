@@ -1,8 +1,7 @@
 ﻿using Microsoft.Azure.Cosmos;
 
-internal sealed class PackageRepository(CosmosClient cosmos, IEventStreams eventStreams)
+internal sealed class PackageRepository(IEventStreams eventStreams)
 {
-    private readonly Container states = cosmos.GetContainer("event-sourcing", "packages");
     public async Task<PackageAggregate> Get(Guid packageId)
     {
         var state = await eventStreams.BuildState<PackageState>(packageId);
