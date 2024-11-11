@@ -11,18 +11,19 @@ builder.Services.AddDbContext<PackageContext>(op =>
 
 builder.Services.AddEventSourcing()
     .AddHandlersFromAssemblyContaining<Program>()
-    //.UseDbContext<PackageContext>()
     .UseCosmos(
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
-    );
+    )
+    .AddStreams()
+    .AddSubscription<PackageSubscription>();
 
 
 builder.Services.AddScoped<PackageRepository>();
 
 builder.Services.AddHostedService<Initializer>();
 
-builder.Services.AddHostedService<PackageProjection>();
+//builder.Services.AddHostedService<PackageProjection>();
 
 
 var app = builder.Build();
@@ -81,52 +82,17 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 
 app.Run();
 
-
-internal sealed class PackageContext : DbContext
+internal class PackageSubscription : Subscription
 {
-    public PackageContext(DbContextOptions<PackageContext> options) : base(options)
+    public PackageSubscription()
     {
+        StartFrom(DateTime.MinValue);
+        Subscribe<PackageReceived>();
+        Subscribe<PackageLoadedOnCart>();
+        Subscribe<PackageOutForDelivery>();
     }
-    public DbSet<PackageReadModel> Packages { get; set; }
-    public DbSet<Projection> Projections => Set<Projection>();
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public override Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
     {
-        modelBuilder.Entity<Projection>(b =>
-        {
-            b.HasKey(p => p.Id);
-            b.Property(p => p.Name).IsRequired();
-            b.Property(p => p.StreamType).IsRequired();
-            b.Property(p => p.Offset).IsRequired().HasDefaultValue(0);
-
-            b.HasIndex(p => p.Name);
-            b.HasIndex(p => p.StreamType);
-        });
-
-        modelBuilder.Entity<PackageReadModel>(b =>
-        {
-            b.HasKey(p => p.Id);
-            b.Property(p => p.TrackingNumber).IsRequired();
-            b.Property(p => p.CartId);
-            b.Property(p => p.OutForDelivery);
-            b.Property(p => p.Version).IsRequired();
-        });
-
+        return Task.CompletedTask;
     }
 }
-
-internal sealed class Projection
-{
-    public long Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string StreamType { get; set; } = string.Empty;
-    public int Offset { get; set; } = 0;
-    public Projection(string name, string streamType)
-    {
-        Name = name;
-        StreamType = streamType;
-    }
-    private Projection()
-    {
-    }
-}
-
