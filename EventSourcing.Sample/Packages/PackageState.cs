@@ -1,4 +1,4 @@
-﻿internal sealed class PackageState : IState
+﻿internal sealed class PackageState : IState<PackageStream>
 {
     #region IState implementation
     public void Apply(IEvent @event)

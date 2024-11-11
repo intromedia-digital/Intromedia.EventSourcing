@@ -11,7 +11,6 @@ builder.Services.AddDbContext<PackageContext>(op =>
 });
 
 builder.Services.AddEventSourcing()
-    .AddHandlersFromAssemblyContaining<Program>()
     .UseCosmos(
         builder.Configuration["Cosmos"]!,
         "event-sourcing"

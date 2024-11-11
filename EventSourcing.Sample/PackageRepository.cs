@@ -17,3 +17,4 @@ internal sealed class PackageRepository(IEventStreams eventStreams)
         await eventStreams.Append<PackageStream>(aggregate.Id, events.ToArray());
     }
 }
+
