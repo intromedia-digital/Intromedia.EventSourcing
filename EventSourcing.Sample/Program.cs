@@ -23,8 +23,7 @@ builder.Services.AddScoped<PackageRepository>();
 
 builder.Services.AddHostedService<Initializer>();
 
-//builder.Services.AddHostedService<PackageProjection>();
-
+builder.Services.AddSingleton<PackageProjection>();
 
 var app = builder.Build();
 
@@ -82,17 +81,20 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 
 app.Run();
 
-internal class PackageSubscription : Subscription
+internal class PackageSubscription: Subscription
 {
-    public PackageSubscription()
+    private readonly PackageProjection _projection;
+    public PackageSubscription(PackageProjection projection)
     {
+        _projection = projection;
+
         StartFrom(DateTime.MinValue);
         Subscribe<PackageReceived>();
         Subscribe<PackageLoadedOnCart>();
         Subscribe<PackageOutForDelivery>();
     }
-    public override Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
+    public override async Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
+        await _projection.Apply(@event);
     }
 }

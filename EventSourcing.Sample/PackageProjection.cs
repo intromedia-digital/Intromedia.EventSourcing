@@ -1,84 +1,26 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory, IEventStreams eventStreams) : BackgroundService
+internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory)
 {
-    private const string STREAM_TYPE = "package";
-    private const string NAME = "package_read_model";
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task Apply(IEvent @event)
     {
-        int offset = await GetOffset();
-        do
-        {
-            var readStream = await eventStreams.Get(STREAM_TYPE, offset);
-            offset = readStream.Offset;
-            foreach (var @event in readStream.Events)
-            {
-                await ReceiveEvent(@event, offset);
-            }
-            await Task.Delay(500);
-        } while (!stoppingToken.IsCancellationRequested);
-    }
-    public async Task ReceiveEvent(IEvent @event, int offset)
-    {
-        using var scope = serviceScopeFactory.CreateScope();
-        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
-        using var transaction = context.Database.BeginTransaction();
-
         switch (@event)
         {
             case PackageReceived packageReceived:
-                await Apply(packageReceived, context);
+                await Apply(packageReceived);
                 break;
             case PackageOutForDelivery packageOutForDelivery:
-                await Apply(packageOutForDelivery, context);
+                await Apply(packageOutForDelivery);
                 break;
             case PackageLoadedOnCart packageLoadedOnCart:
-                await Apply(packageLoadedOnCart, context);
+                await Apply(packageLoadedOnCart);
                 break;
         }
-
-        await UpdateOffset(offset);
-        await context.SaveChangesAsync();
-        await transaction.CommitAsync();
     }
-    private async Task UpdateOffset(int offset)
+    private async Task Apply(PackageReceived @event)
     {
         using var scope = serviceScopeFactory.CreateScope();
         using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
-
-        var projection = await context.Projections
-            .Where(p => p.Name == NAME)
-            .FirstOrDefaultAsync();
-
-        if (projection == null)
-        {
-            projection = new Projection(NAME, STREAM_TYPE);
-            context.Projections.Add(projection);
-        }
-
-        projection.Offset = offset;
-        await context.SaveChangesAsync();
-    }
-    private async Task<int> GetOffset()
-    {
-        using var scope = serviceScopeFactory.CreateScope();
-        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
-
-        var projection = await context.Projections
-            .Where(p => p.Name == NAME)
-            .FirstOrDefaultAsync();
-
-        if (projection == null)
-        {
-            projection = new Projection(NAME, STREAM_TYPE);
-            context.Projections.Add(projection);
-            await context.SaveChangesAsync();
-        }
-
-        return projection.Offset;
-    }
-    private async Task Apply(PackageReceived @event, PackageContext context)
-    {
         var readModel = new PackageReadModel
         {
             Id = @event.PackageId,
@@ -86,18 +28,25 @@ internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory
             Version = @event.Version
         };
         await context.Packages.AddAsync(readModel);
+        await context.SaveChangesAsync();
     }
-    private async Task Apply(PackageOutForDelivery @event, PackageContext context)
+    private async Task Apply(PackageOutForDelivery @event)
     {
+        using var scope = serviceScopeFactory.CreateScope();
+        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
         var readModel = await Get(@event.PackageId, context);
         readModel.OutForDelivery = @event.Timestamp;
         readModel.Version = @event.Version;
+        await context.SaveChangesAsync();
     }
-    private async Task Apply(PackageLoadedOnCart @event, PackageContext context)
+    private async Task Apply(PackageLoadedOnCart @event)
     {
+        using var scope = serviceScopeFactory.CreateScope();
+        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
         var readModel = await Get(@event.PackageId, context);
         readModel.CartId = @event.CartId;
         readModel.Version = @event.Version;
+        await context.SaveChangesAsync();
     }
     private async Task<PackageReadModel> Get(Guid packageId, PackageContext context)
     {
@@ -112,5 +61,5 @@ internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory
 
         return readModel;
     }
-   
+
 }
