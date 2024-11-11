@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public static class DependencyInjection
 {
@@ -39,8 +40,9 @@ public static class DependencyInjection
     public static IEventSourcingCosmosBuilder AddStream<TStream>(this IEventSourcingCosmosBuilder builder)
         where TStream : IStream
     {
-        builder.Services.AddSingleton(typeof(IStream), typeof(TStream));
+        builder.Services.RemoveAll(typeof(TStream));
         builder.Services.AddSingleton(typeof(TStream));
+        builder.Services.AddSingleton(typeof(IStream), sp => sp.GetRequiredService<TStream>());
 
         return builder;
     }
@@ -48,6 +50,10 @@ public static class DependencyInjection
         where TSubscription : Subscription<TStream>
         where TStream : IStream
     {
+        builder.Services.RemoveAll(typeof(TStream));
+        builder.Services.AddSingleton(typeof(TStream));
+        builder.Services.AddSingleton(typeof(IStream), sp => sp.GetRequiredService<TStream>());
+
         builder.Services.AddSingleton<TSubscription>();
         builder.Services.AddHostedService<SubscriptionReader<TSubscription, TStream>>();
         return builder;

@@ -79,26 +79,3 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 #endregion
 
 app.Run();
-
-internal sealed class PackageStream : IStream
-{
-    public string Name => "package";
-}
-
-internal class PackageSubscription: Subscription<PackageStream>
-{
-    private readonly PackageProjection _projection;
-    public PackageSubscription(PackageProjection projection)
-    {
-        _projection = projection;
-
-        StartFrom(DateTime.MinValue);
-        Subscribe<PackageReceived>();
-        Subscribe<PackageLoadedOnCart>();
-        Subscribe<PackageOutForDelivery>();
-    }
-    public override async Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
-    {
-        await _projection.Apply(@event);
-    }
-}
