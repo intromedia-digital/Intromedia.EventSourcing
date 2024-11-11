@@ -22,7 +22,7 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
     }
     public async Task<TState> BuildState<TStream, TState>(Guid streamId) 
         where TStream : IStream
-        where TState : IState, new()
+        where TState : IState<TStream>, new()
     {
         IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
         var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
