@@ -51,43 +51,5 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
 
         return state;
     }
-
-    public async Task<ReadStream> Get(string streamType, int offset)
-    {
-        FeedIterator<Event> iterator;
-
-
-        iterator = _container.GetItemLinqQueryable<Event>(
-           requestOptions: new QueryRequestOptions
-           {
-               PartitionKey = new PartitionKey(streamType),
-               MaxItemCount = 1
-           })
-            .Where(e => e.StreamType == streamType)
-            .OrderBy(e => e.Timestamp)
-            .Skip(offset)
-            .ToFeedIterator();
-
-        var events = new List<IEvent>();
-
-        string continuation = string.Empty;
-
-        var response = await iterator.ReadNextAsync();
-        continuation = response.ContinuationToken;
-        foreach (var @event in response)
-        {
-            var data = JsonConvert.DeserializeObject(@event.Payload, new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All,
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-            if (data is IEvent evnt)
-            {
-                events.Add(evnt);
-            }
-        }
-
-        return new ReadStream(offset + events.Count(), events);
-    }
 }
 
