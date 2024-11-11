@@ -1,3 +1,4 @@
+using EntityFramework.Exceptions.SqlServer;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<PackageContext>(op =>
 {
-    op.UseSqlServer(builder.Configuration["Sql"]!);
+    op.UseSqlServer(builder.Configuration["Sql"]!).UseExceptionProcessor();
 });
 
 builder.Services.AddEventSourcing()
@@ -15,14 +16,12 @@ builder.Services.AddEventSourcing()
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
     )
-    .AddStreams()
-    .AddSubscription<PackageSubscription>();
+    .AddAppendStream()
+    .AddStream<PackageStream>()
+    .AddSubscription<PackageSubscription, PackageStream>();
 
 
 builder.Services.AddScoped<PackageRepository>();
-
-builder.Services.AddHostedService<Initializer>();
-
 builder.Services.AddSingleton<PackageProjection>();
 
 var app = builder.Build();
@@ -81,7 +80,12 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 
 app.Run();
 
-internal class PackageSubscription: Subscription
+internal sealed class PackageStream : IStream
+{
+    public string Name => "package";
+}
+
+internal class PackageSubscription: Subscription<PackageStream>
 {
     private readonly PackageProjection _projection;
     public PackageSubscription(PackageProjection projection)

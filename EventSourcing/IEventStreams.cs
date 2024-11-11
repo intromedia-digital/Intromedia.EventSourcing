@@ -1,6 +1,8 @@
 ﻿public interface IEventStreams
 {
-    Task Append(Guid streamId, string streamType, params IEvent[] events);
-    Task<TState> BuildState<TState>(Guid streamId) where TState : IState, new();
+    Task Append<TStream>(Guid streamId, params IEvent[] events) where TStream : IStream;
+    Task<TState> BuildState<TStream, TState>(Guid streamId)
+        where TStream : IStream
+        where TState : IState, new();
 }
 

@@ -1,4 +1,5 @@
-﻿public abstract class Subscription
+﻿public abstract class Subscription<TStream>
+    where TStream : IStream
 {
     private readonly List<Type> _subscribedEvents = new();
     public DateTime StartTime { get; private set; } = DateTime.MinValue;

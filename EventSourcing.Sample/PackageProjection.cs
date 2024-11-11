@@ -1,26 +1,53 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
 internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory)
 {
     public async Task Apply(IEvent @event)
     {
+        using var scope = serviceScopeFactory.CreateScope();
+        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
+
+        var existingEvent = await context.ReceivedEvents
+            .AnyAsync(e => e.EventId == @event.EventId);
+
+        if (existingEvent)
+        {
+            return;
+        }
+
+        var transaction = await context.Database.BeginTransactionAsync();
+
+        var receivedEvent = new ReceivedEvents
+        {
+            EventId = @event.EventId
+        };
+
+        await context.ReceivedEvents.AddAsync(receivedEvent);
+        await context.SaveChangesAsync();
+
         switch (@event)
         {
             case PackageReceived packageReceived:
-                await Apply(packageReceived);
+                await Apply(packageReceived, context);
                 break;
             case PackageOutForDelivery packageOutForDelivery:
-                await Apply(packageOutForDelivery);
+                await Apply(packageOutForDelivery, context);
                 break;
             case PackageLoadedOnCart packageLoadedOnCart:
-                await Apply(packageLoadedOnCart);
+                await Apply(packageLoadedOnCart, context);
                 break;
         }
+
+        try
+        {
+            await transaction.CommitAsync();
+        }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync();
+        }
     }
-    private async Task Apply(PackageReceived @event)
+    private async Task Apply(PackageReceived @event, PackageContext context)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
         var readModel = new PackageReadModel
         {
             Id = @event.PackageId,
@@ -30,19 +57,15 @@ internal sealed class PackageProjection(IServiceScopeFactory serviceScopeFactory
         await context.Packages.AddAsync(readModel);
         await context.SaveChangesAsync();
     }
-    private async Task Apply(PackageOutForDelivery @event)
+    private async Task Apply(PackageOutForDelivery @event, PackageContext context)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
         var readModel = await Get(@event.PackageId, context);
         readModel.OutForDelivery = @event.Timestamp;
         readModel.Version = @event.Version;
         await context.SaveChangesAsync();
     }
-    private async Task Apply(PackageLoadedOnCart @event)
+    private async Task Apply(PackageLoadedOnCart @event, PackageContext context)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        using var context = scope.ServiceProvider.GetRequiredService<PackageContext>();
         var readModel = await Get(@event.PackageId, context);
         readModel.CartId = @event.CartId;
         readModel.Version = @event.Version;

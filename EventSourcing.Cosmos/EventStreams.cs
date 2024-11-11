@@ -3,27 +3,31 @@ using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
-internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDatabaseOptions> options) : IEventStreams
+using Microsoft.Extensions.DependencyInjection;
+internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDatabaseOptions> options, IServiceScopeFactory serviceScopeFactory) : IEventStreams
 {
-    private readonly Container _container = cosmosClient.GetContainer(options.Value.DatabaseId, options.Value.StreamContainerId);
-    public async Task Append(Guid streamId, string streamType, params IEvent[] events)
+    public async Task Append<TStream>(Guid streamId, params IEvent[] events)
+        where TStream : IStream
     {
-        var partitionKeyBuilder = new PartitionKeyBuilder();
-        partitionKeyBuilder.Add(streamType);
-        partitionKeyBuilder.Add(streamId.ToString());
-        var transaction = _container.CreateTransactionalBatch(partitionKeyBuilder.Build());
+        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
+        var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
+        var transaction = container.CreateTransactionalBatch(new PartitionKey(streamId.ToString()));
 
         foreach (var @event in events)
         {
-            transaction.CreateItem(new Event(streamId, streamType, @event));
+            transaction.CreateItem(new Event(streamId, @event));
         }
 
         await transaction.ExecuteAsync();
     }
-    public async Task<TState> BuildState<TState>(Guid streamId) where TState : IState, new()
+    public async Task<TState> BuildState<TStream, TState>(Guid streamId) 
+        where TStream : IStream
+        where TState : IState, new()
     {
+        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
+        var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
         var partitionKey = new PartitionKey(streamId.ToString());
-        var iterator = _container.GetItemLinqQueryable<Event>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey })
+        var iterator = container.GetItemLinqQueryable<Event>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey })
             .Where(e => e.StreamId == streamId)
             .OrderBy(e => e.Timestamp)
             .ToFeedIterator();

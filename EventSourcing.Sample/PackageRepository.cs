@@ -2,10 +2,9 @@
 
 internal sealed class PackageRepository(IEventStreams eventStreams)
 {
-    private const string STREAM_TYPE = "package";
     public async Task<PackageAggregate> Get(Guid packageId)
     {
-        var state = await eventStreams.BuildState<PackageState>(packageId);
+        var state = await eventStreams.BuildState<PackageStream, PackageState>(packageId);
         if (state is null)
         {
             throw new InvalidOperationException("Package not found");
@@ -15,6 +14,6 @@ internal sealed class PackageRepository(IEventStreams eventStreams)
     public async Task Save(PackageAggregate aggregate)
     {
         var events = aggregate.PopEvents();
-        await eventStreams.Append(aggregate.Id, STREAM_TYPE, events.ToArray());
+        await eventStreams.Append<PackageStream>(aggregate.Id, events.ToArray());
     }
 }
