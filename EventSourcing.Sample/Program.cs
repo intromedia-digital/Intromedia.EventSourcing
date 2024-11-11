@@ -11,16 +11,19 @@ builder.Services.AddDbContext<PackageContext>(op =>
 
 builder.Services.AddEventSourcing()
     .AddHandlersFromAssemblyContaining<Program>()
-    //.UseDbContext<PackageContext>()
     .UseCosmos(
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
-    );
+    )
+    .AddStreams()
+    .AddSubscription<PackageSubscription>();
 
 
 builder.Services.AddScoped<PackageRepository>();
 
 builder.Services.AddHostedService<Initializer>();
+
+//builder.Services.AddHostedService<PackageProjection>();
 
 
 var app = builder.Build();
@@ -74,13 +77,22 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
     return state is not null ? Results.Ok(state) : Results.NotFound();
 });
 
-app.MapGet("carts/{cartId:guid}", async (Guid cartId, CosmosClient cosmos) =>
-{
-    var container = cosmos.GetContainer("event-sourcing", "carts");
-    Cart cart = await container.ReadItemAsync<Cart>(cartId.ToString(), new PartitionKey(cartId.ToString()));
-    return cart is not null ? Results.Ok(cart) : Results.NotFound();
-});
 
 #endregion
 
 app.Run();
+
+internal class PackageSubscription : Subscription
+{
+    public PackageSubscription()
+    {
+        StartFrom(DateTime.MinValue);
+        Subscribe<PackageReceived>();
+        Subscribe<PackageLoadedOnCart>();
+        Subscribe<PackageOutForDelivery>();
+    }
+    public override Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}

@@ -16,9 +16,7 @@ internal sealed class Processor : IHostedService
         .WithLeaseContainer(leases.Container)
         .Build();
     }
-
     private readonly ChangeFeedProcessor changeFeedProcessor;
-
     private async static Task HandleChanges(IReadOnlyCollection<Event> changes, IServiceScopeFactory scopeFactory, CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
@@ -31,7 +29,7 @@ internal sealed class Processor : IHostedService
             {
                 TypeNameHandling = TypeNameHandling.All
             });
-            if(@event is IEvent)
+            if (@event is IEvent)
             {
                 try
                 {
@@ -46,15 +44,13 @@ internal sealed class Processor : IHostedService
                 logger.LogWarning("Could not deserialize event in {@Change}", change);
         }
     }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await changeFeedProcessor.StartAsync();
     }
-
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        if(changeFeedProcessor is not null)
+        if (changeFeedProcessor is not null)
             await changeFeedProcessor.StopAsync();
     }
 }

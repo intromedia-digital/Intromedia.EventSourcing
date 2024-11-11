@@ -14,11 +14,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EventSourcing.Cosmos\EventSourcing.Cosmos.csproj" />
-    <ProjectReference Include="..\EventSourcing.EntityFrameworkCore\EventSourcing.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\EventSourcing\EventSourcing.csproj" />
   </ItemGroup>
 

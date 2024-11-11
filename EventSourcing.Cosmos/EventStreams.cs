@@ -6,18 +6,20 @@ using Newtonsoft.Json;
 internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDatabaseOptions> options) : IEventStreams
 {
     private readonly Container _container = cosmosClient.GetContainer(options.Value.DatabaseId, options.Value.StreamContainerId);
-    public async Task Append(Guid streamId, params IEvent[] events)
+    public async Task Append(Guid streamId, string streamType, params IEvent[] events)
     {
-        var transaction = _container.CreateTransactionalBatch(new PartitionKey(streamId.ToString()));
+        var partitionKeyBuilder = new PartitionKeyBuilder();
+        partitionKeyBuilder.Add(streamType);
+        partitionKeyBuilder.Add(streamId.ToString());
+        var transaction = _container.CreateTransactionalBatch(partitionKeyBuilder.Build());
 
         foreach (var @event in events)
         {
-            transaction.CreateItem(new Event(streamId, @event));
+            transaction.CreateItem(new Event(streamId, streamType, @event));
         }
 
         await transaction.ExecuteAsync();
     }
-
     public async Task<TState> BuildState<TState>(Guid streamId) where TState : IState, new()
     {
         var partitionKey = new PartitionKey(streamId.ToString());
@@ -40,7 +42,7 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
                     TypeNameHandling = TypeNameHandling.All,
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
-                if(data is IEvent evnt)
+                if (data is IEvent evnt)
                 {
                     state.Apply(evnt);
                 }
@@ -48,6 +50,44 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
         }
 
         return state;
+    }
+
+    public async Task<ReadStream> Get(string streamType, int offset)
+    {
+        FeedIterator<Event> iterator;
+
+
+        iterator = _container.GetItemLinqQueryable<Event>(
+           requestOptions: new QueryRequestOptions
+           {
+               PartitionKey = new PartitionKey(streamType),
+               MaxItemCount = 1
+           })
+            .Where(e => e.StreamType == streamType)
+            .OrderBy(e => e.Timestamp)
+            .Skip(offset)
+            .ToFeedIterator();
+
+        var events = new List<IEvent>();
+
+        string continuation = string.Empty;
+
+        var response = await iterator.ReadNextAsync();
+        continuation = response.ContinuationToken;
+        foreach (var @event in response)
+        {
+            var data = JsonConvert.DeserializeObject(@event.Payload, new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+            if (data is IEvent evnt)
+            {
+                events.Add(evnt);
+            }
+        }
+
+        return new ReadStream(offset + events.Count(), events);
     }
 }
 

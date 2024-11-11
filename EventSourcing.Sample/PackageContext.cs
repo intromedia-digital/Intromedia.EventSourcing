@@ -1,16 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-internal class PackageContext : DbContext
+internal sealed class PackageContext : DbContext
 {
-    // dotnet ef migrations add Initial -p EventSourcing.Sample -c PackageContext
     public PackageContext(DbContextOptions<PackageContext> options) : base(options)
     {
     }
+    public DbSet<PackageReadModel> Packages { get; set; }
+    public DbSet<Projection> Projections => Set<Projection>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Projection>(b =>
+        {
+            b.HasKey(p => p.Id);
+            b.Property(p => p.Name).IsRequired();
+            b.Property(p => p.StreamType).IsRequired();
+            b.Property(p => p.Offset).IsRequired().HasDefaultValue(0);
 
-        modelBuilder.ConfigureEventSourcing();
+            b.HasIndex(p => p.Name);
+            b.HasIndex(p => p.StreamType);
+        });
+
+        modelBuilder.Entity<PackageReadModel>(b =>
+        {
+            b.HasKey(p => p.Id);
+            b.Property(p => p.TrackingNumber).IsRequired();
+            b.Property(p => p.CartId);
+            b.Property(p => p.OutForDelivery);
+            b.Property(p => p.Version).IsRequired();
+        });
+
     }
-
 }
+

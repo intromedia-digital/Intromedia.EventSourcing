@@ -7,7 +7,14 @@ internal sealed class Initializer(CosmosClient cosmos, IOptions<CosmosDatabaseOp
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await cosmos.CreateDatabaseIfNotExistsAsync(options.Value.DatabaseId);
-        await cosmos.GetDatabase(options.Value.DatabaseId).CreateContainerIfNotExistsAsync(options.Value.StreamContainerId, "/streamId");
+        await cosmos.GetDatabase(options.Value.DatabaseId)
+            .CreateContainerIfNotExistsAsync(
+                new ContainerProperties
+                {
+                    Id = options.Value.StreamContainerId,
+                    PartitionKeyPaths = new[] { "/streamType", "/streamId" }
+                }
+                );
     }
     public Task StopAsync(CancellationToken cancellationToken)
     {

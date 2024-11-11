@@ -2,6 +2,7 @@
 
 internal sealed class PackageRepository(IEventStreams eventStreams)
 {
+    private const string STREAM_TYPE = "package";
     public async Task<PackageAggregate> Get(Guid packageId)
     {
         var state = await eventStreams.BuildState<PackageState>(packageId);
@@ -14,6 +15,6 @@ internal sealed class PackageRepository(IEventStreams eventStreams)
     public async Task Save(PackageAggregate aggregate)
     {
         var events = aggregate.PopEvents();
-        await eventStreams.Append(aggregate.Id, events.ToArray());
+        await eventStreams.Append(aggregate.Id, STREAM_TYPE, events.ToArray());
     }
 }
