@@ -25,11 +25,6 @@ public static class DependencyInjection
         builder.Services.AddHostedService<Initializer>();
 
 
-        builder.Services.AddMediatR(c =>
-        {
-            c.RegisterServicesFromAssembly(assembly: typeof(DependencyInjection).Assembly);
-        });
-
         return new EventSourcingCosmosBuilder(builder.Services);
     }
     public static IEventSourcingCosmosBuilder AddAppendStream(this IEventSourcingCosmosBuilder builder)
