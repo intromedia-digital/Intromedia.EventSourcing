@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 internal sealed class Event
 {
@@ -8,7 +7,7 @@ internal sealed class Event
     public string EventType { get; set; }
     public Guid Id { get; set; }
     public int Version { get; set; }
-    public string Payload { get; set; }
+    public IEvent Data { get; set; }
     public Event(Guid streamId, IEvent @event) 
     {
         StreamId = streamId;
@@ -16,11 +15,7 @@ internal sealed class Event
         Id = Guid.NewGuid();
         Version = @event.Version;
         EventType = @event.GetType().Name;
-        Payload = JsonConvert.SerializeObject(@event, new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
-        });
+        Data = @event;
     }
     [JsonConstructor]
     private Event() { }

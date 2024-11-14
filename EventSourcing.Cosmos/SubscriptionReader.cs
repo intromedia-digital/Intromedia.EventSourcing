@@ -33,15 +33,11 @@ internal sealed class SubscriptionReader<TSubscription, TStream>(IServiceScopeFa
     {
         foreach (var change in changes)
         {
-            var @event = JsonConvert.DeserializeObject(change.Payload, new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All
-            });
-            if (@event is IEvent)
+            if (change.Data is IEvent evnt)
             {
                 // Check if the event is subscribed
-                if (subscription.SubscribedEvents.Any(x => x == @event.GetType()))
-                    await subscription.HandleEvent((IEvent)@event, cancellationToken);
+                if (subscription.SubscribedEvents.Any(x => x == evnt.GetType()))
+                    await subscription.HandleEvent(evnt, cancellationToken);
             }
         }
     }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using System.Text.Json;
 
 public static class DependencyInjection
 {
@@ -10,10 +13,11 @@ public static class DependencyInjection
             connectionString,
             new CosmosClientOptions
             {
-                SerializerOptions = new CosmosSerializationOptions
+                Serializer = new CosmosJsonDotNetSerializer(new JsonSerializerSettings
                 {
-                    PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-                }
+                    TypeNameHandling = TypeNameHandling.All,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                })
             }
         ));
 
