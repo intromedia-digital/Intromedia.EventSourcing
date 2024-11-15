@@ -20,7 +20,7 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
 
         await transaction.ExecuteAsync();
     }
-    public async Task<TState> BuildState<TStream, TState>(Guid streamId) 
+    public async Task<TState> BuildState<TStream, TState>(Guid streamId)
         where TStream : IStream
         where TState : IState<TStream>, new()
     {
@@ -41,15 +41,7 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
         {
             foreach (var @event in await iterator.ReadNextAsync())
             {
-                var data = JsonConvert.DeserializeObject(@event.Payload, new JsonSerializerSettings
-                {
-                    TypeNameHandling = TypeNameHandling.All,
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                });
-                if (data is IEvent evnt)
-                {
-                    state.Apply(evnt);
-                }
+                state.Apply(@event.Data);
             }
         }
 

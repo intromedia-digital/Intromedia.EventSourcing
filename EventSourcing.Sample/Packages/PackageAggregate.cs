@@ -38,6 +38,7 @@ internal sealed class PackageAggregate
         var e = new PackageLoadedOnCart
         {
             PackageId = _state.Id,
+            Timestamp = DateTime.UtcNow,
             CartId = cartId,
             Version = _state.NextVersion()
         };
