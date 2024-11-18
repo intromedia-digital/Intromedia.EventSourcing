@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 public static class DependencyInjection
 {
-   public static IEventSourcingBuilder AddEventTypesFromAssembies(this IEventSourcingBuilder builder, params Assembly[] assemblies)
+   public static IEventSourcingBuilder AddEventTypesFromAssemblies(this IEventSourcingBuilder builder, params Assembly[] assemblies)
     {
         var eventTypes = assemblies.SelectMany(a => a.GetTypes())
             .Where(t => typeof(IEvent).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
