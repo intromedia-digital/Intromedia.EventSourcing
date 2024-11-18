@@ -8,11 +8,14 @@ internal sealed class PackageAggregate
         {
             Id = id,
         };
+        var rnd = new Random();
+        PackageRecievedMetadata metadata = new PackageReceivedMetadataTwo();
         var e = new PackageReceived
         {
             PackageId = id,
             TrackingNumber = trackingNumber,
-            Version = _state.Version
+            Version = _state.Version,
+            Metadata = metadata
         };
         _state.Apply(e);
         _events.Add(e);

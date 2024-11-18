@@ -1,5 +1,6 @@
 ﻿
-public interface IEvent
+
+public partial interface IEvent
 {
     DateTime Timestamp { get; }
     Guid EventId { get; }

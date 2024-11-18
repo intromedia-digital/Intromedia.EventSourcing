@@ -1,6 +1,10 @@
 using EntityFramework.Exceptions.SqlServer;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +15,7 @@ builder.Services.AddDbContext<PackageContext>(op =>
 });
 
 builder.Services.AddEventSourcing()
+    .AddEventTypesFromAssembies(typeof(Program).Assembly)
     .UseCosmos(
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
@@ -78,3 +83,5 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 #endregion
 
 app.Run();
+
+

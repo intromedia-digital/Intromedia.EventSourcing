@@ -1,5 +1,5 @@
 @EventSouring_HostAddress = https://localhost:7033
-@PackageId = 1D079D08-C393-494C-AEAC-EA64D7A2A71C
+@PackageId = 9a7d8e82-c7f4-4217-b4f9-7d8e90d5cb2c
 @CartId = f58bc7d8-2c78-4ed6-bdd3-dec9c53bf95f
 
 GET {{EventSouring_HostAddress}}/packages/{{PackageId}}

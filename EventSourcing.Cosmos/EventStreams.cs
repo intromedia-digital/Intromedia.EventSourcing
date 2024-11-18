@@ -1,14 +1,22 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
-internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDatabaseOptions> options, IServiceScopeFactory serviceScopeFactory) : IEventStreams
+
+
+internal sealed class EventStreams(
+    CosmosClient cosmosClient, 
+    IOptions<CosmosDatabaseOptions> options, 
+    IServiceScopeFactory serviceScopeFactory) 
+    : IEventStreams
 {
     public async Task Append<TStream>(Guid streamId, params IEvent[] events)
         where TStream : IStream
     {
+        if (events.Length == 0)
+        {
+            return;
+        }
+
         IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
         var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
         var transaction = container.CreateTransactionalBatch(new PartitionKey(streamId.ToString()));
@@ -27,10 +35,17 @@ internal sealed class EventStreams(CosmosClient cosmosClient, IOptions<CosmosDat
         IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
         var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
         var partitionKey = new PartitionKey(streamId.ToString());
-        var iterator = container.GetItemLinqQueryable<Event>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey })
-            .Where(e => e.StreamId == streamId)
-            .OrderBy(e => e.Timestamp)
-            .ToFeedIterator();
+
+        QueryDefinition query = new QueryDefinition($"SELECT * FROM c WHERE c.streamId = @streamId")
+            .WithParameter("@streamId", streamId);
+
+        var iterator = container.GetItemQueryIterator<Event>(
+            query,
+            requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = partitionKey
+            }
+        );
 
         var state = new TState()
         {

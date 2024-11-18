@@ -1,23 +1,41 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json;
+using System.Reflection;
 using System.Text.Json;
-
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 public static class DependencyInjection
 {
-    public static IEventSourcingCosmosBuilder UseCosmos(this IEventSourcingBuilder builder, string connectionString, string databaseId)
+   public static IEventSourcingBuilder AddEventTypesFromAssembies(this IEventSourcingBuilder builder, params Assembly[] assemblies)
     {
-        builder.Services.AddSingleton(new CosmosClient(
+        var eventTypes = assemblies.SelectMany(a => a.GetTypes())
+            .Where(t => typeof(IEvent).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+            .Select(t => new JsonDerivedType(t, t.Name))
+            .ToArray();
+
+        builder.Services.AddSingleton(sp => new PolymorphicTypeResolver(eventTypes));
+        return builder;
+    }
+    public static IEventSourcingCosmosBuilder UseCosmos(this IEventSourcingBuilder builder,
+        string connectionString,
+        string databaseId,
+        params Assembly[] eventAssemblies
+        )
+    {
+        builder.Services.AddSingleton(sp => new CosmosClient(
             connectionString,
             new CosmosClientOptions
             {
-                Serializer = new CosmosJsonDotNetSerializer(new JsonSerializerSettings
+                UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions
                 {
-                    TypeNameHandling = TypeNameHandling.All,
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                })
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                    TypeInfoResolver = sp.GetRequiredService<PolymorphicTypeResolver>()
+                }
             }
         ));
 
@@ -59,3 +77,4 @@ public static class DependencyInjection
     }
 
 }
+
