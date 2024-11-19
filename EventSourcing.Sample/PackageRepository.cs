@@ -1,11 +1,11 @@
 ﻿using Microsoft.Azure.Cosmos;
 
-internal sealed class PackageRepository(IAppendStream eventStreams)
+internal sealed class PackageRepository(IAppendStream<PackageStream> packageStream, IAppendStream<Packge2Stream> package2Stream)
 {
     public async Task<PackageAggregate> Get(Guid packageId)
     {
-        var state = await eventStreams.BuildState<PackageStream, PackageState>(packageId);
-        var state2 = await eventStreams.BuildState<Packge2Stream, Package2State>(packageId);
+        var state = await packageStream.BuildState<PackageState>(packageId);
+        var state2 = await package2Stream.BuildState<Package2State>(packageId);
 
         if (state is null)
         {
@@ -16,7 +16,7 @@ internal sealed class PackageRepository(IAppendStream eventStreams)
     public async Task Save(PackageAggregate aggregate)
     {
         var events = aggregate.PopEvents();
-        await eventStreams.Append<PackageStream>(aggregate.Id, events.ToArray());
+        await packageStream.Append(aggregate.Id, events.ToArray());
     }
 }
 
