@@ -3,14 +3,14 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 
-internal sealed class EventStreams(
+internal sealed class EventStreams<TStream>(
     CosmosClient cosmosClient, 
     IOptions<CosmosDatabaseOptions> options, 
     IServiceScopeFactory serviceScopeFactory) 
-    : IEventStreams
+    : IAppendStream<TStream>
+    where TStream : IStream
 {
-    public async Task Append<TStream>(Guid streamId, params IEvent[] events)
-        where TStream : IStream
+    public async Task Append(Guid streamId, params IEvent[] events)
     {
         if (events.Length == 0)
         {
@@ -28,8 +28,7 @@ internal sealed class EventStreams(
 
         await transaction.ExecuteAsync();
     }
-    public async Task<TState> BuildState<TStream, TState>(Guid streamId)
-        where TStream : IStream
+    public async Task<TState> BuildState<TState>(Guid streamId)
         where TState : IState<TStream>, new()
     {
         IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();

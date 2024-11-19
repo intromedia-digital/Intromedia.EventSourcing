@@ -20,8 +20,8 @@ builder.Services.AddEventSourcing()
         builder.Configuration["Cosmos"]!,
         "event-sourcing"
     )
-    .AddAppendStream()
-    .AddStream<PackageStream>()
+    .AddAppendStream<PackageStream>()
+    .AddAppendStream<Packge2Stream>()
     .AddSubscription<PackageSubscription, PackageStream>();
 
 
