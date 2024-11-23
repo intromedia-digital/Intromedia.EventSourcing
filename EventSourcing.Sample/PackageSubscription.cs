@@ -10,7 +10,7 @@
         Subscribe<PackageLoadedOnCart>();
         Subscribe<PackageOutForDelivery>();
     }
-    public override async Task HandleEvent(IEvent @event, CancellationToken cancellationToken)
+    public override async Task HandleEvent(Guid streamId, IEvent @event, CancellationToken cancellationToken)
     {
         await _projection.Apply(@event);
     }

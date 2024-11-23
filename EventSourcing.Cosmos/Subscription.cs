@@ -12,5 +12,5 @@
         StartTime = startTime;
     }
     public IReadOnlyList<Type> SubscribedEvents => _subscribedEvents.AsReadOnly();
-    public abstract Task HandleEvent(IEvent @event, CancellationToken cancellationToken);
+    public abstract Task HandleEvent(Guid streamId, IEvent @event, CancellationToken cancellationToken);
 }

@@ -1,8 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using System.Text;
-
 
 public sealed class CosmosJsonDotNetSerializer : CosmosSerializer
 {

@@ -1,4 +1,5 @@
-﻿internal sealed class PackageOutForDelivery : IEvent
+﻿[EventName("package_outfordelivery_v1")]
+internal sealed class PackageOutForDelivery : IEvent
 {
     public Guid EventId { get; set; } = Guid.NewGuid();
     public required Guid PackageId { get; set; }

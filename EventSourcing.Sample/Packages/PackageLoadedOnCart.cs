@@ -1,4 +1,6 @@
-﻿internal sealed class PackageLoadedOnCart : IEvent
+﻿
+[EventName("package_loadedoncart_v1")]
+internal sealed class PackageLoadedOnCart : IEvent
 {
     public Guid EventId { get; set; } = Guid.NewGuid();
     public required Guid PackageId { get; set; }

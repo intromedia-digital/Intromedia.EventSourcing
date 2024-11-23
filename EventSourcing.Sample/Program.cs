@@ -15,11 +15,12 @@ builder.Services.AddDbContext<PackageContext>(op =>
 });
 
 builder.Services.AddEventSourcing()
-    .AddEventTypesFromAssemblies(typeof(Program).Assembly)
     .UseCosmos(
-        builder.Configuration["Cosmos"]!,
-        "event-sourcing"
+        connectionString: builder.Configuration["Cosmos"]!,
+        databaseId: "event-sourcing",
+        serviceKey: ServiceKey.Key
     )
+    .AddEventTypesFromAssemblies(typeof(Program).Assembly)
     .AddAppendStream<PackageStream>()
     .AddAppendStream<Packge2Stream>()
     .AddSubscription<PackageSubscription, PackageStream>();
@@ -72,11 +73,9 @@ app.MapPost("packages/{packageId:guid}/begindelivery", async (Guid packageId, Pa
     return Results.NoContent();
 });
 
-app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosmos) =>
+app.MapGet("packages/{packageId:guid}", async (Guid packageId, [FromKeyedServices(ServiceKey.Key)] CosmosClient cosmos) =>
 {
-    var container = cosmos.GetContainer("event-sourcing", "packages");
-    PackageReadModel state = await container.ReadItemAsync<PackageReadModel>(packageId.ToString(), new PartitionKey(packageId.ToString()));
-    return state is not null ? Results.Ok(state) : Results.NotFound();
+    var container = cosmos.GetContainer("event-sourcing", "package");
 });
 
 
@@ -85,3 +84,10 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, CosmosClient cosm
 app.Run();
 
 
+
+
+public static class ServiceKey
+{
+    public const string Key = "ServiceKey1";
+
+}

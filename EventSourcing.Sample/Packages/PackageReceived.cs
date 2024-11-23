@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
+[EventName("package_received_v1")]
 internal sealed record PackageReceived : IEvent
 {
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;

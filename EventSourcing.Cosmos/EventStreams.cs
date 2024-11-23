@@ -1,11 +1,11 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 
 internal sealed class EventStreams<TStream>(
+    object serviceKey,
     CosmosClient cosmosClient, 
-    IOptions<CosmosDatabaseOptions> options, 
+    CosmosDatabaseOptions options, 
     IServiceScopeFactory serviceScopeFactory) 
     : IAppendStream<TStream>
     where TStream : IStream
@@ -17,8 +17,8 @@ internal sealed class EventStreams<TStream>(
             return;
         }
 
-        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
-        var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
+        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
+        var container = cosmosClient.GetContainer(options.DatabaseId, stream.Name);
         var transaction = container.CreateTransactionalBatch(new PartitionKey(streamId.ToString()));
 
         foreach (var @event in events)
@@ -31,8 +31,8 @@ internal sealed class EventStreams<TStream>(
     public async Task<TState> BuildState<TState>(Guid streamId)
         where TState : IState<TStream>, new()
     {
-        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<TStream>();
-        var container = cosmosClient.GetContainer(options.Value.DatabaseId, stream.Name);
+        IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
+        var container = cosmosClient.GetContainer(options.DatabaseId, stream.Name);
         var partitionKey = new PartitionKey(streamId.ToString());
 
         QueryDefinition query = new QueryDefinition($"SELECT * FROM c WHERE c.streamId = @streamId")

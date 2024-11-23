@@ -3,8 +3,10 @@
 internal class EventSourcingCosmosBuilder : IEventSourcingCosmosBuilder
 {
     public IServiceCollection Services { get; }
-    public EventSourcingCosmosBuilder(IServiceCollection services)
+    public object ServiceKey { get; init; }
+    public EventSourcingCosmosBuilder(IServiceCollection services, object serviceKey)
     {
         Services = services;
+        ServiceKey = serviceKey;
     }
 }
