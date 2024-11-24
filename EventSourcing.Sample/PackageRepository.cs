@@ -1,11 +1,10 @@
 ﻿using Microsoft.Azure.Cosmos;
 
-internal sealed class PackageRepository(IAppendStream<PackageStream> packageStream, IAppendStream<Packge2Stream> package2Stream)
+internal sealed class PackageRepository(IAppendStream<PackageStream> packageStream)
 {
     public async Task<PackageAggregate> Get(Guid packageId)
     {
         var state = await packageStream.BuildState<PackageState>(packageId);
-        var state2 = await package2Stream.BuildState<Package2State>(packageId);
 
         if (state is null)
         {

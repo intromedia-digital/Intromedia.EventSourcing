@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using EventSourcing.Cosmos;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -100,6 +101,7 @@ public static class DependencyInjection
 
         return cosmosBuilder;
     }
+   
     public static IEventSourcingCosmosBuilder AddAppendStream<TStream>(this IEventSourcingCosmosBuilder builder)
         where TStream : IStream
     {
