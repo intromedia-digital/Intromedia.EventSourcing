@@ -3,6 +3,7 @@ using EventSourcing.Cosmos;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Text.Json;
@@ -32,7 +33,7 @@ public static class DependencyInjection
         {
             DatabaseId = databaseId
         });
-        builder.Services.AddHostedService<Initializer>(sp => new Initializer(builder.ServiceKey, sp.GetRequiredService<IServiceScopeFactory>()));
+        builder.Services.AddSingleton<IHostedService>(sp => new Initializer(builder.ServiceKey, sp.GetRequiredService<IServiceScopeFactory>()));
         return builder;
     }
     public static IEventSourcingCosmosBuilder UseCosmos(this IEventSourcingBuilder builder,
