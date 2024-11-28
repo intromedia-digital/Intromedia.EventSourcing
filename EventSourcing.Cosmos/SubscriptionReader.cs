@@ -22,8 +22,7 @@ internal sealed class SubscriptionReader<TSubscription, TStream>(
 
         var db = cosmosClient.GetDatabase(options.DatabaseId);
 
-        string leaseContainerId = $"{stream.Name}_leases";
-        var leaseContainer = await db.CreateContainerIfNotExistsAsync(leaseContainerId, "/id");
+        var leaseContainer = await db.CreateContainerIfNotExistsAsync("leases", "/id");
 
         changeFeedProcessor = cosmosClient.GetContainer(options.DatabaseId, stream.Name)
             .GetChangeFeedProcessorBuilder<Event>(subscription.GetType().FullName, (changes, ct) => HandleChanges(changes, subscription, ct))

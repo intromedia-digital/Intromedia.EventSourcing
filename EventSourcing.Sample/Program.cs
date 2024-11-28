@@ -23,7 +23,9 @@ builder.Services.AddEventSourcing()
     .AddEventTypesFromAssemblies(typeof(Program).Assembly)
     .AddAppendStream<PackageStream>()
     .AddAppendStream<Packge2Stream>()
-    .AddSubscription<PackageSubscription, PackageStream>();
+    .AddSubscription<PackageSubscription, PackageStream>()
+    .AddSubscription<Package2Subscription, PackageStream>();
+
 
 builder.Services.AddEventSourcing()
     .UseCosmos(
