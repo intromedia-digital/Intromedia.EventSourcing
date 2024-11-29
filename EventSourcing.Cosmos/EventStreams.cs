@@ -36,7 +36,7 @@ internal sealed class EventStreams<TStream>(
 		var container = cosmosClient.GetContainer(options.DatabaseId, stream.Name);
 		var partitionKey = new PartitionKey(streamId.ToString());
 
-		QueryDefinition query = new QueryDefinition($"SELECT * FROM c WHERE c.streamId = @streamId ORDER BY c.Version DESC")
+		QueryDefinition query = new QueryDefinition($"SELECT * FROM c WHERE c.streamId = @streamId ORDER BY c.Version ASC")
 			.WithParameter("@streamId", streamId);
 
 		var iterator = container.GetItemQueryIterator<Event>(
