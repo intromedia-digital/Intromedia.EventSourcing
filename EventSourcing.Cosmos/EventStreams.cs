@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 namespace EventSourcing.Cosmos;
 
 
@@ -18,7 +19,8 @@ internal sealed class EventStreams<TStream>(
 			return;
 		}
 
-		IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
+		var scope = serviceScopeFactory.CreateScope();
+        IStream stream = scope.ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
 		var container = cosmosClient.GetContainer(options.DatabaseId, stream.Name);
 		var transaction = container.CreateTransactionalBatch(new PartitionKey(streamId.ToString()));
 
@@ -32,7 +34,9 @@ internal sealed class EventStreams<TStream>(
 	public async Task<TState> BuildState<TState>(Guid streamId)
 		where TState : IState<TStream>, new()
 	{
-		IStream stream = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
+        var scope = serviceScopeFactory.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<EventStreams<TStream>>>();
+        IStream stream = scope.ServiceProvider.GetRequiredKeyedService<TStream>(serviceKey);
 		var container = cosmosClient.GetContainer(options.DatabaseId, stream.Name);
 		var partitionKey = new PartitionKey(streamId.ToString());
 
@@ -54,7 +58,9 @@ internal sealed class EventStreams<TStream>(
 
 		while (iterator.HasMoreResults)
 		{
-			foreach (var @event in await iterator.ReadNextAsync())
+			FeedResponse<Event> response = await iterator.ReadNextAsync();
+			logger.LogInformation("Read {Count} events from stream {StreamId} consuming {RU}", response.Count, streamId, response.RequestCharge);
+            foreach (var @event in response.Resource)
 			{
 				state.Apply(@event.Data);
 			}

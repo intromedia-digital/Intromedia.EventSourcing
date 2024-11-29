@@ -27,14 +27,6 @@ builder.Services.AddEventSourcing()
     .AddSubscription<Package2Subscription, PackageStream>();
 
 
-builder.Services.AddEventSourcing()
-    .UseCosmos(
-    connectionString: builder.Configuration["Cosmos"]!,
-    databaseId: "event-sourcing-db2",
-    serviceKey: "OtherServiceKey"
-    )
-    .AddEventTypesFromAssemblies(typeof(Program).Assembly)
-    .AddAppendStream<PackageStream>();
 
 builder.Services.AddScoped<PackageRepository>();
 builder.Services.AddSingleton<PackageProjection>();
