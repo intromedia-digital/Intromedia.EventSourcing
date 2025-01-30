@@ -26,5 +26,8 @@
 		<ProjectReference Include="..\EventSourcing\EventSourcing.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="EventSourcing.Cosmos.Tests" />
+	</ItemGroup>
 
 </Project>

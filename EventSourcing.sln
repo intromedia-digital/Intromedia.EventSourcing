@@ -3,17 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35424.110
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing.Sample", "EventSourcing.Sample\EventSourcing.Sample.csproj", "{7D5DD46A-90C8-42E9-8158-647A360C558F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing.Cosmos", "EventSourcing.Cosmos\EventSourcing.Cosmos.csproj", "{F430A074-9D18-4BD2-9E9E-4BE689903AD3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing", "EventSourcing\EventSourcing.csproj", "{DC248562-4573-4262-8F08-6A2D4C0A63C7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{88EE65DF-2638-498C-975D-CF72EBB2EDB0}"
 	ProjectSection(SolutionItems) = preProject
 		license.txt = license.txt
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing", "src\EventSourcing\EventSourcing.csproj", "{6A896FA2-D967-45CF-B2BE-CD3FA193AB07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Cosmos", "src\EventSourcing.Cosmos\EventSourcing.Cosmos.csproj", "{B05D3EF7-198E-4D29-A60D-059D194B1977}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{789E3A93-9F49-4343-B97F-15E839266410}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Cosmos.Tests", "tests\EventSourcing.Cosmos.Tests\EventSourcing.Cosmos.Tests.csproj", "{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,21 +25,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7D5DD46A-90C8-42E9-8158-647A360C558F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D5DD46A-90C8-42E9-8158-647A360C558F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D5DD46A-90C8-42E9-8158-647A360C558F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D5DD46A-90C8-42E9-8158-647A360C558F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F430A074-9D18-4BD2-9E9E-4BE689903AD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F430A074-9D18-4BD2-9E9E-4BE689903AD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F430A074-9D18-4BD2-9E9E-4BE689903AD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F430A074-9D18-4BD2-9E9E-4BE689903AD3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DC248562-4573-4262-8F08-6A2D4C0A63C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DC248562-4573-4262-8F08-6A2D4C0A63C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DC248562-4573-4262-8F08-6A2D4C0A63C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DC248562-4573-4262-8F08-6A2D4C0A63C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B05D3EF7-198E-4D29-A60D-059D194B1977}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B05D3EF7-198E-4D29-A60D-059D194B1977}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B05D3EF7-198E-4D29-A60D-059D194B1977}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B05D3EF7-198E-4D29-A60D-059D194B1977}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
+		{B05D3EF7-198E-4D29-A60D-059D194B1977} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
+		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD} = {789E3A93-9F49-4343-B97F-15E839266410}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {10BDEC88-C237-4310-ADDF-2BB536E6A678}
