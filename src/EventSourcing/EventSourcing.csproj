@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net9.0;net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>1.1.0</Version>
+		<Version>2.0.0</Version>
 		<PackageId>Intromedia.EventSourcing</PackageId>
 		<Product>Intromedia.EventSourcing</Product>
 		<Authors>Edvard Jinder</Authors>

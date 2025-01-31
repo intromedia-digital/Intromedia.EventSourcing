@@ -1,14 +1,6 @@
-using EntityFramework.Exceptions.SqlServer;
 using EventSourcing;
 using EventSourcing.Cosmos;
 using EventSourcing.Cosmos.Tests;
-using Microsoft.Azure.Cosmos;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
-using static Azure.Core.HttpHeader;
 
 var builder = WebApplication.CreateBuilder(args);
 
