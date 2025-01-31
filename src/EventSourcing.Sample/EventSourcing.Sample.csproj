@@ -10,16 +10,17 @@
   <ItemGroup>
     <PackageReference Include="EntityFrameworkCore.Exceptions.SqlServer" Version="8.1.3" />
     <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+	  <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.1" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\tests\EventSourcing.Cosmos.Tests\EventSourcing.Cosmos.Tests.csproj" />
     <ProjectReference Include="..\EventSourcing.Cosmos\EventSourcing.Cosmos.csproj" />
     <ProjectReference Include="..\EventSourcing\EventSourcing.csproj" />
   </ItemGroup>

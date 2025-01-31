@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
+namespace EventSourcing;
 
 public class EventSourcingBuilder : IEventSourcingBuilder
 {

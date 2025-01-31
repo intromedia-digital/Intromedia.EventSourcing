@@ -1,5 +1,6 @@
-﻿public interface IEventStore
+﻿namespace EventSourcing;
+public interface IEventStore
 {
-    Task<IEventStream> OpenStream(string type, Guid streamId, CancellationToken cancellationToken = default);
+    Task AppendToStreamAsync(string type, Guid streamId, IEnumerable<IEvent> events, CancellationToken cancellationToken = default);
+    Task<IEnumerable<IEvent>> ReadStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default);
 }
-

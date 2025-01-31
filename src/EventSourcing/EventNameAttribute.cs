@@ -1,4 +1,6 @@
-﻿public sealed class EventNameAttribute : Attribute
+﻿namespace EventSourcing;
+
+public sealed class EventNameAttribute : Attribute
 {
     public string EventName { get; set; }
 

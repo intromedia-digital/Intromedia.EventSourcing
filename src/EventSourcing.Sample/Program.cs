@@ -1,35 +1,37 @@
 using EntityFramework.Exceptions.SqlServer;
+using EventSourcing;
+using EventSourcing.Cosmos;
+using EventSourcing.Cosmos.Tests;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using static Azure.Core.HttpHeader;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddDbContext<PackageContext>(op =>
+builder.Services.AddMediatR(x =>
 {
-    op.UseSqlServer(builder.Configuration["Sql"]!).UseExceptionProcessor();
+    x.RegisterServicesFromAssemblyContaining<SampleEventHandler>();
 });
 
-builder.Services.AddEventSourcing()
-    .UseCosmos(
-        connectionString: builder.Configuration["Cosmos"]!,
-        databaseId: "event-sourcing",
-        serviceKey: ServiceKey.Key
-    )
-    .AddEventTypesFromAssemblies(typeof(Program).Assembly)
-    .AddAppendStream<PackageStream>()
-    .AddAppendStream<Packge2Stream>()
-    .AddSubscription<PackageSubscription, PackageStream>()
-    .AddSubscription<Package2Subscription, PackageStream>();
+builder.Services.AddEventSourcing(e =>
+{
+    e.UseCosmos(c =>
+    {
+        c.UseConnectionString(builder.Configuration.GetConnectionString("cosmos")!);
+        c.UseDatabase("test");
+        c.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
+        c.AddStream(Streams.Packages);
+        c.AddInMemoryPublisher();
+        c.ConfigureInfrastructure();
+        c.AddProjection<SampleProjection>(Streams.Packages, DateTime.MinValue);
+    });
 
+});
 
-
-builder.Services.AddScoped<PackageRepository>();
-builder.Services.AddSingleton<PackageProjection>();
 
 var app = builder.Build();
 
@@ -42,42 +44,25 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 #region Endpoints
-app.MapPost("packages", async (PackageRepository packageRepository) =>
+
+
+app.MapGet("packages", async (IEventStore eventStore) =>
 {
-    var packageId = Guid.NewGuid();
+    var id = Guid.NewGuid();
 
-    var package = new PackageAggregate(packageId, "ABC123");
+    var sampleEvent = new SampleEvent
+    {
+        Name = "test"
+    };
 
-    await packageRepository.Save(package);
-
-    return Results.Ok(packageId);
-});
-
-app.MapPost("packages/{packageId:guid}/load", async (Guid packageId, Guid cartId, PackageRepository packageRepository) =>
-{
-    var package = await packageRepository.Get(packageId);
-
-    package.LoadOnCart(cartId);
-
-    await packageRepository.Save(package);
+    await eventStore.AppendToStreamAsync(Streams.Packages, id, [new SampleEvent {
+            StreamId = id,
+            Id = Guid.NewGuid(),
+            Version = 1,
+            Name = "test"
+        }]);
 
     return Results.NoContent();
-});
-
-app.MapPost("packages/{packageId:guid}/begindelivery", async (Guid packageId, PackageRepository packageRepository) =>
-{
-    var package = await packageRepository.Get(packageId);
-
-    package.BeginDelivery();
-
-    await packageRepository.Save(package);
-
-    return Results.NoContent();
-});
-
-app.MapGet("packages/{packageId:guid}", async (Guid packageId, [FromKeyedServices(ServiceKey.Key)] CosmosClient cosmos) =>
-{
-    var container = cosmos.GetContainer("event-sourcing", "package");
 });
 
 
@@ -86,10 +71,9 @@ app.MapGet("packages/{packageId:guid}", async (Guid packageId, [FromKeyedService
 app.Run();
 
 
-
-
-public static class ServiceKey
+internal static class Streams
 {
-    public const string Key = "ServiceKey1";
-
+    public const string Packages = "packages";
 }
+
+

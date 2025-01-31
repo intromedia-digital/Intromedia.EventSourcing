@@ -1,6 +1,8 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Scripts;
 using Microsoft.Extensions.Hosting;
+
+namespace EventSourcing.Cosmos;
 internal sealed class CosmosInfrastructureInitializer : IHostedService
 {
     private readonly CosmosClient _cosmosClient;
@@ -18,6 +20,11 @@ internal sealed class CosmosInfrastructureInitializer : IHostedService
     {
         DatabaseResponse databaseResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseId, cancellationToken: cancellationToken);
         Database database = databaseResponse.Database;
+        await database.CreateContainerIfNotExistsAsync(new ContainerProperties
+        {
+            Id = CosmosEventSourcingBuilder.LeaseContainerId,
+            PartitionKeyPath = "/id"
+        }, cancellationToken: cancellationToken);
         foreach (string containerId in _containerIds)
         {
             var uniqueKeyPolicy = new UniqueKeyPolicy();

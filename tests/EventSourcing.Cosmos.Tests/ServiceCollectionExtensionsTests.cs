@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace EventSourcing.Cosmos.Tests;
 
@@ -13,11 +15,14 @@ public class ServiceCollectionExtensionsTests
             .Build();
 
         IServiceCollection services = new ServiceCollection();
-
+        services.AddLogging();
+        services.AddMediatR(x =>
+        {
+            x.RegisterServicesFromAssemblyContaining<ServiceCollectionExtensionsTests>();
+        });
+           
         services.AddEventSourcing(e =>
         {
-            //e.UseKeyedServices("serviceKey");
-
             e.UseCosmos(cosmos =>
             {
                 cosmos.UseConnectionString(cfg.GetConnectionString("cosmos")!);
@@ -26,42 +31,50 @@ public class ServiceCollectionExtensionsTests
 
                 cosmos.AddStream("packages");
 
+                cosmos.AddInMemoryPublisher();
+                //cosmos.AddProjection<IProjection>();
+
                 cosmos.ConfigureInfrastructure();
             });
-
-
-            //e.AddEventualProjection<IProjection>();
-            //e.AddLiveProjection<IProjection>();
-
-            //e.AddInMemoryPublisher();
         });
 
         IServiceProvider provider = services.BuildServiceProvider();
 
-        var initializer = provider.GetRequiredService<CosmosInfrastructureInitializer>();
+        var hostedServices = provider.GetServices<IHostedService>();
 
-        await initializer.StartAsync(default);
+        foreach (var hostedService in hostedServices)
+        {
+            await hostedService.StartAsync(CancellationToken.None);
+        }
 
         var eventStore = provider.GetRequiredService<IEventStore>();
 
         Assert.NotNull(eventStore);
 
         var id = Guid.NewGuid();
-        var packageStream = await eventStore.OpenStream("packages", id);
-
-        Assert.NotNull(packageStream);
-
 
         var sampleEvent = new SampleEvent
         {
             Name = "test"
         };
 
-        await packageStream.AppendToStreamAsync([new Event(Guid.NewGuid(), 1, sampleEvent)]);
-        await packageStream.AppendToStreamAsync([new Event(Guid.NewGuid(), 2, sampleEvent)]);
+        await eventStore.AppendToStreamAsync("packages", id, [new SampleEvent {
+            StreamId = id,
+            Id = Guid.NewGuid(),
+            Version = 1,
+            Name = "test"
+        }]);
 
+        await eventStore.AppendToStreamAsync("packages", id, [new SampleEvent {
+            StreamId = id,
+            Id = Guid.NewGuid(),
+            Version = 2,
+            Name = "test 2"
+        }]);
 
-        var events = await packageStream.ReadStreamAsync();
+        await Task.Delay(30000);
+
+        var events = await eventStore.ReadStreamAsync("packages", id);
 
         Assert.Equal(2, events.Count());
 
@@ -69,23 +82,41 @@ public class ServiceCollectionExtensionsTests
 
         Assert.Equal(1, firstEvent.Version);
 
-        Assert.IsType<SampleEvent>(firstEvent.Data);
+        Assert.IsType<SampleEvent>(firstEvent);
 
-        if(firstEvent.Data is SampleEvent sample)
+        if (firstEvent is SampleEvent sample)
         {
             Assert.Equal("test", sample.Name);
         }
-
-
-
-
-
 
     }
 }
 
 [EventName("sample")]
-public class SampleEvent : IEventData
+public class SampleEvent : IEvent
 {
     public string? Name { get; set; }
+    public Guid StreamId { get; init; }
+    public Guid Id { get; init; }
+    public int Version { get; init; }
+}
+
+public class SampleEventHandler : INotificationHandler<SampleEvent>
+{
+    public Task Handle(SampleEvent notification, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+public class SampleProjection : Projection
+{
+    public SampleProjection(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+    public override string Name => "SampleProjection";
+    public override Task ProjectAsync(IEvent @event, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 }

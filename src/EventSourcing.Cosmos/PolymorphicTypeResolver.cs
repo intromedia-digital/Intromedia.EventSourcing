@@ -1,7 +1,7 @@
-﻿using System.Reflection;
+﻿using EventSourcing;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-
+namespace EventSourcing.Cosmos;
 public class PolymorphicTypeResolver(JsonDerivedType[] types) : DefaultJsonTypeInfoResolver
 {
     public override JsonTypeInfo GetTypeInfo(Type type, JsonSerializerOptions options)
@@ -9,7 +9,7 @@ public class PolymorphicTypeResolver(JsonDerivedType[] types) : DefaultJsonTypeI
         JsonTypeInfo jsonTypeInfo = base.GetTypeInfo(type, options);
 
 
-        if (jsonTypeInfo.Type != typeof(IEventData))
+        if (jsonTypeInfo.Type != typeof(IEvent))
             return jsonTypeInfo;
 
         var polymorphismOptions = new JsonPolymorphismOptions();

@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{789E3A93
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Cosmos.Tests", "tests\EventSourcing.Cosmos.Tests\EventSourcing.Cosmos.Tests.csproj", "{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Sample", "src\EventSourcing.Sample\EventSourcing.Sample.csproj", "{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +51,7 @@ Global
 		{6A896FA2-D967-45CF-B2BE-CD3FA193AB07} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
 		{B05D3EF7-198E-4D29-A60D-059D194B1977} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
 		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD} = {789E3A93-9F49-4343-B97F-15E839266410}
+		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {10BDEC88-C237-4310-ADDF-2BB536E6A678}

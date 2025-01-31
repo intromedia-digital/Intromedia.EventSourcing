@@ -2,20 +2,23 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-internal sealed class EventSourcingCosmosBuilder : IEventSourcingCosmosBuilder
+namespace EventSourcing.Cosmos;
+
+internal sealed class CosmosEventSourcingBuilder : ICosmosEventSourcingBuilder
 {
+    internal const string LeaseContainerId = "lease";
     public IServiceCollection Services { get; }
     public object ServiceKey { get; private set; }
     private bool ShouldUseKeyedServices { get; set; }
     private string DatabaseId { get; set; } = "eventsourcing";
-    private List<string> ContainerIds { get; } = new();
-    public EventSourcingCosmosBuilder(IServiceCollection services, object serviceKey, bool shouldUseKeyedServices)
+    private List<string> ContainerIds { get; } = [];
+    public CosmosEventSourcingBuilder(IServiceCollection services, object serviceKey, bool shouldUseKeyedServices)
     {
         Services = services;
         ServiceKey = serviceKey;
@@ -25,7 +28,7 @@ internal sealed class EventSourcingCosmosBuilder : IEventSourcingCosmosBuilder
     {
         var assembly = typeof(T).Assembly;
         JsonDerivedType[] eventTypes = assembly.GetTypes()
-            .Where(t => t.IsAssignableTo(typeof(IEventData)) && !t.IsInterface && !t.IsAbstract)
+            .Where(t => t.IsAssignableTo(typeof(IEvent)) && !t.IsInterface && !t.IsAbstract)
             .Select(t =>
             {
                 EventNameAttribute attribute = t.GetCustomAttribute<EventNameAttribute>() ?? throw new EventNameAttributeNotSet(t);
@@ -93,6 +96,28 @@ internal sealed class EventSourcingCosmosBuilder : IEventSourcingCosmosBuilder
         {
             Services.AddSingleton(sp => sp.GetRequiredKeyedService<CosmosInfrastructureInitializer>(ServiceKey));
             Services.AddSingleton<IEventStore>(sp => sp.GetRequiredKeyedService<IEventStore>(ServiceKey));
+        }
+
+
+    }
+    public void AddProjection<TProjection>(string streamType, DateTime? startFrom = null) where TProjection : Projection
+    {
+        Services.AddKeyedSingleton<TProjection>(ServiceKey);
+        Services.AddSingleton<IHostedService>(sp =>
+            new ProjectionChangeFeedProcessor<TProjection>(
+                sp.GetRequiredService<ILogger<ProjectionChangeFeedProcessor<TProjection>>>(),
+                sp.GetRequiredKeyedService<CosmosClient>(ServiceKey).GetContainer(DatabaseId, streamType),
+                sp.GetRequiredKeyedService<CosmosClient>(ServiceKey).GetContainer(DatabaseId, LeaseContainerId),
+                sp.GetRequiredKeyedService<TProjection>(ServiceKey),
+                startFrom ?? DateTime.UtcNow
+                )
+            );
+    }
+    public void AddInMemoryPublisher()
+    {
+        foreach (string containerId in ContainerIds)
+        {
+            AddProjection<InMemoryEventPublisher>(containerId, DateTime.UtcNow);
         }
     }
 }
