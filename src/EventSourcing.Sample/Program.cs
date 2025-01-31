@@ -16,9 +16,13 @@ builder.Services.AddEventSourcing(e =>
         c.UseConnectionString(builder.Configuration.GetConnectionString("cosmos")!);
         c.UseDatabase("test");
         c.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
+
         c.AddStream(Streams.Packages);
-        c.AddInMemoryPublisher();
+        c.AddStream(Streams.Orders);
+
         c.ConfigureInfrastructure();
+
+        c.AddInMemoryPublisher();
         c.AddProjection<SampleProjection>(Streams.Packages, DateTime.MinValue);
     });
 });
@@ -64,6 +68,8 @@ app.Run();
 internal static class Streams
 {
     public const string Packages = "packages";
+    public const string Orders = "orders";
+
 }
 
 

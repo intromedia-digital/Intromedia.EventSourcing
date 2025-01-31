@@ -7,7 +7,7 @@ internal sealed class InMemoryEventPublisher(IServiceProvider serviceProvider) :
     private readonly ILogger<InMemoryEventPublisher> _logger = serviceProvider.GetRequiredService<ILogger<InMemoryEventPublisher>>();
     private readonly IPublisher _publisher = serviceProvider.GetRequiredService<IPublisher>();
     public override string Name => "InMemoryEventPublisher";
-    public override async Task ProjectAsync(IEvent @event, CancellationToken cancellationToken = default)
+    public override async Task ApplyAsync(IEvent @event, CancellationToken cancellationToken = default)
     {
         using var scope = _logger.BeginScope(@event);
         try

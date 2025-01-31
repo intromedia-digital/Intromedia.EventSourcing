@@ -51,7 +51,7 @@ where TProjection : Projection
         {
             try
             {
-                await projection.ProjectAsync(change, cancellationToken);
+                await projection.ApplyAsync(change, cancellationToken);
             }
             catch (Exception ex)
             {

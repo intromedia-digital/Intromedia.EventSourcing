@@ -111,7 +111,7 @@ public class SampleProjection : Projection
     {
     }
     public override string Name => "SampleProjection";
-    public override Task ProjectAsync(IEvent @event, CancellationToken cancellationToken = default)
+    public override Task ApplyAsync(IEvent @event, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

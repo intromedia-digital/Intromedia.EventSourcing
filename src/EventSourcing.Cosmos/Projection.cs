@@ -8,5 +8,5 @@ public abstract class Projection /*: IProjection*/
         ServiceProvider = serviceProvider;
     }
     public abstract string Name { get; }
-    public abstract Task ProjectAsync(IEvent @event, CancellationToken cancellationToken = default);
+    public abstract Task ApplyAsync(IEvent @event, CancellationToken cancellationToken = default);
 }
