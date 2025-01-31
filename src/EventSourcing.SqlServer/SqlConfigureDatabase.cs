@@ -1,19 +1,16 @@
 ﻿using Microsoft.Extensions.Hosting;
 
 namespace EventSourcing.SqlServer;
-internal sealed class SqlConfigureDatabase(DbConnectionFactory dbConnectionFactory) : IHostedService
+internal sealed class SqlConfigureDatabase(DbConnectionFactory dbConnectionFactory, string database) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         using var dbConnection = dbConnectionFactory.CreateConnection();
         dbConnection.Open();
         using var command = dbConnection.CreateCommand();
-        command.CommandText = @"
-            IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'EventSourcing')
-            BEGIN
-                CREATE DATABASE EventSourcing;
-            END
-            USE EventSourcing;
+
+        command.CommandText = $@"
+            USE {database};
             IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Streams')
             BEGIN
                 CREATE TABLE Streams (

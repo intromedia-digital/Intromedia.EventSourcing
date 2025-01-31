@@ -18,6 +18,7 @@ internal sealed class SqlServerEventSourcingBuilder : ISqlServerEventSourcingBui
     public IServiceCollection Services { get; }
     public object ServiceKey { get; private set; }
     private bool ShouldUseKeyedServices { get; set; }
+    private string DatabaseName { get; set; } = "EventSourcing";
     public SqlServerEventSourcingBuilder(IServiceCollection services, object serviceKey, bool shouldUseKeyedServices)
     {
         Services = services;
@@ -42,10 +43,16 @@ internal sealed class SqlServerEventSourcingBuilder : ISqlServerEventSourcingBui
         {
             Services.AddSingleton(sp => sp.GetRequiredKeyedService<DbConnectionFactory>(ServiceKey));
         }
+
+        var dbName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+        if (!string.IsNullOrWhiteSpace(dbName))
+        {
+            DatabaseName = dbName;
+        }
     }
     public void ConfigureInfrastructure()
     {
-        Services.AddKeyedSingleton<SqlConfigureDatabase>(ServiceKey, (sp, _) => new SqlConfigureDatabase(sp.GetRequiredKeyedService<DbConnectionFactory>(ServiceKey)));
+        Services.AddKeyedSingleton<SqlConfigureDatabase>(ServiceKey, (sp, _) => new SqlConfigureDatabase(sp.GetRequiredKeyedService<DbConnectionFactory>(ServiceKey), DatabaseName));
         Services.AddSingleton<IHostedService, SqlConfigureDatabase>(sp => sp.GetRequiredKeyedService<SqlConfigureDatabase>(ServiceKey));
         Services.AddKeyedSingleton<IEventStore, SqlServerEventStore>(ServiceKey);
 
@@ -83,4 +90,6 @@ internal sealed class SqlServerEventSourcingBuilder : ISqlServerEventSourcingBui
                 )
             );
     }
+
+   
 }
