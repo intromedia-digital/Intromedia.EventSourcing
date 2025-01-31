@@ -24,20 +24,7 @@ internal sealed class CosmosEventSourcingBuilder : ICosmosEventSourcingBuilder
         ServiceKey = serviceKey;
         ShouldUseKeyedServices = shouldUseKeyedServices;
     }
-    public void RegisterPolymorphicTypesFromAssemblyContaining<T>()
-    {
-        var assembly = typeof(T).Assembly;
-        JsonDerivedType[] eventTypes = assembly.GetTypes()
-            .Where(t => t.IsAssignableTo(typeof(IEvent)) && !t.IsInterface && !t.IsAbstract)
-            .Select(t =>
-            {
-                EventNameAttribute attribute = t.GetCustomAttribute<EventNameAttribute>() ?? throw new EventNameAttributeNotSet(t);
-                return new JsonDerivedType(t, attribute.EventName);
-            })
-            .ToArray() ?? [];
-
-        Services.AddKeyedSingleton<PolymorphicTypeResolver>(serviceKey: ServiceKey, (sp, k) => new PolymorphicTypeResolver(eventTypes));
-    }
+    
     public void UseConnectionString(string connectionString)
     {
         Services.AddKeyedSingleton(ServiceKey, (sp, _) => new CosmosClient(connectionString,
@@ -97,8 +84,6 @@ internal sealed class CosmosEventSourcingBuilder : ICosmosEventSourcingBuilder
             Services.AddSingleton(sp => sp.GetRequiredKeyedService<CosmosInfrastructureInitializer>(ServiceKey));
             Services.AddSingleton<IEventStore>(sp => sp.GetRequiredKeyedService<IEventStore>(ServiceKey));
         }
-
-
     }
     public void AddProjection<TProjection>(string streamType, DateTime? startFrom = null) where TProjection : Projection
     {

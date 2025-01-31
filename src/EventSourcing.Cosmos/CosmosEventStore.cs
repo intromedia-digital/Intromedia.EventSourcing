@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Logging;
 namespace EventSourcing.Cosmos;
+
 internal sealed class CosmosEventStore : IEventStore
 {
     private readonly CosmosClient _cosmosClient;
@@ -22,9 +22,16 @@ internal sealed class CosmosEventStore : IEventStore
     }
     public async Task<IEnumerable<IEvent>> ReadStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default)
     {
+        return await ReadStreamAsync(type, streamId, 0, cancellationToken);
+    }
+    public async Task<IEnumerable<IEvent>> ReadStreamAsync(string type, Guid streamId, int fromVersion, CancellationToken cancellationToken = default)
+    {
         var container = _cosmosClient.GetContainer(_databaseId, type);
-        var query = new QueryDefinition("SELECT * FROM c WHERE c.streamId = @streamId")
-            .WithParameter("@streamId", streamId.ToString());
+
+        var query = new QueryDefinition("SELECT * FROM c WHERE c.streamId = @streamId AND c.version >= @fromVersion")
+            .WithParameter("@streamId", streamId.ToString())
+            .WithParameter("@fromVersion", fromVersion);
+
         var iterator = container.GetItemQueryIterator<IEvent>(query, requestOptions: new QueryRequestOptions
         {
             PartitionKey = new PartitionKey(streamId.ToString())
@@ -36,5 +43,19 @@ internal sealed class CosmosEventStore : IEventStore
             events.AddRange(response);
         }
         return events.OrderBy(e => e.Version);
+    }
+    public async Task RemoveStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default)
+    {
+        var container = _cosmosClient.GetContainer(_databaseId, type);
+        
+        ResponseMessage response = await container.DeleteAllItemsByPartitionKeyStreamAsync(
+            new PartitionKey(streamId.ToString()), 
+            cancellationToken: cancellationToken
+            );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException($"Failed to remove stream {streamId} from {type}.");
+        }
     }
 }

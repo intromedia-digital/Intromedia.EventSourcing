@@ -1,6 +1,8 @@
 using EventSourcing;
 using EventSourcing.Cosmos;
 using EventSourcing.Cosmos.Tests;
+using EventSourcing.SqlServer;
+using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,20 +13,35 @@ builder.Services.AddMediatR(x =>
 
 builder.Services.AddEventSourcing(e =>
 {
-    e.UseCosmos(c =>
+    e.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
+
+    //e.UseCosmos(c =>
+    //{
+    //    c.UseConnectionString(builder.Configuration.GetConnectionString("cosmos")!);
+    //    c.UseDatabase("test");
+
+    //    c.AddStream(Streams.Packages);
+    //    c.AddStream(Streams.Orders);
+
+    //    c.ConfigureInfrastructure();
+
+    //    c.AddInMemoryPublisher();
+    //    c.AddProjection<SampleProjection>(Streams.Packages, startFrom: DateTime.MinValue);
+
+    //});
+
+    e.UseSqlServer(s =>
     {
-        c.UseConnectionString(builder.Configuration.GetConnectionString("cosmos")!);
-        c.UseDatabase("test");
-        c.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
+        s.UseConnectionString(builder.Configuration.GetConnectionString("sql")!);
 
-        c.AddStream(Streams.Packages);
-        c.AddStream(Streams.Orders);
+        s.ConfigureInfrastructure();
 
-        c.ConfigureInfrastructure();
+        s.AddInMemoryPublisher();
 
-        c.AddInMemoryPublisher();
-        c.AddProjection<SampleProjection>(Streams.Packages, DateTime.MinValue);
+        s.AddProjection<SampleProjection>(Streams.Packages, startFrom: DateTime.MinValue);
     });
+
+
 });
 
 var app = builder.Build();
@@ -44,10 +61,17 @@ app.MapGet("packages", async (IEventStore eventStore) =>
 {
     var id = Guid.NewGuid();
 
-    var sampleEvent = new SampleEvent
+    try
     {
-        Name = "test"
-    };
+        IEventValidator.Validate(new SampleEvent
+            {
+                Name = "test"
+            }
+        );
+    }
+    catch (ValidationException)
+    {
+    }
 
     await eventStore.AppendToStreamAsync(Streams.Packages, id, [new SampleEvent {
             StreamId = id,

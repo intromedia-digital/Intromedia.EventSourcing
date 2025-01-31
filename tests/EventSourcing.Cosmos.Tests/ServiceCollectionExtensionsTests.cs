@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using static Azure.Core.HttpHeader;
 
 namespace EventSourcing.Cosmos.Tests;
 
@@ -23,11 +24,12 @@ public class ServiceCollectionExtensionsTests
            
         services.AddEventSourcing(e =>
         {
+            e.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
+
             e.UseCosmos(cosmos =>
             {
                 cosmos.UseConnectionString(cfg.GetConnectionString("cosmos")!);
                 cosmos.UseDatabase("test");
-                cosmos.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
                 cosmos.AddStream("packages");
                 cosmos.AddInMemoryPublisher();
                 cosmos.ConfigureInfrastructure();

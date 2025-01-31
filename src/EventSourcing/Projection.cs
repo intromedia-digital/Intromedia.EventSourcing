@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Cosmos;
+﻿namespace EventSourcing;
 
 public abstract class Projection /*: IProjection*/
 {

@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Cosmos.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Sample", "src\EventSourcing.Sample\EventSourcing.Sample.csproj", "{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SqlServer", "src\EventSourcing.SqlServer\EventSourcing.SqlServer.csproj", "{9841931F-2503-41FB-B766-9A4F8CD86C78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9841931F-2503-41FB-B766-9A4F8CD86C78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9841931F-2503-41FB-B766-9A4F8CD86C78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9841931F-2503-41FB-B766-9A4F8CD86C78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9841931F-2503-41FB-B766-9A4F8CD86C78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +58,7 @@ Global
 		{B05D3EF7-198E-4D29-A60D-059D194B1977} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
 		{F1D0A854-E0C9-4256-A217-49DDD9E13CFD} = {789E3A93-9F49-4343-B97F-15E839266410}
 		{5FD2BDFF-6FD9-46EA-82A6-00153B80F3F4} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
+		{9841931F-2503-41FB-B766-9A4F8CD86C78} = {9BFB8D07-7C8C-48B6-8702-5DC9DF528CFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {10BDEC88-C237-4310-ADDF-2BB536E6A678}

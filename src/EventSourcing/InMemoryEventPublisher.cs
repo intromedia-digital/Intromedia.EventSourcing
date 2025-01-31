@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-namespace EventSourcing.Cosmos;
-internal sealed class InMemoryEventPublisher(IServiceProvider serviceProvider) : Projection(serviceProvider)
+namespace EventSourcing;
+public sealed class InMemoryEventPublisher(IServiceProvider serviceProvider) : Projection(serviceProvider)
 {
     private readonly ILogger<InMemoryEventPublisher> _logger = serviceProvider.GetRequiredService<ILogger<InMemoryEventPublisher>>();
     private readonly IPublisher _publisher = serviceProvider.GetRequiredService<IPublisher>();
