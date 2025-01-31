@@ -29,9 +29,7 @@ builder.Services.AddEventSourcing(e =>
         c.ConfigureInfrastructure();
         c.AddProjection<SampleProjection>(Streams.Packages, DateTime.MinValue);
     });
-
 });
-
 
 var app = builder.Build();
 

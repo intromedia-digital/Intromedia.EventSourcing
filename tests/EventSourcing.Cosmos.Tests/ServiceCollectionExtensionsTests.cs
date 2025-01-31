@@ -28,12 +28,8 @@ public class ServiceCollectionExtensionsTests
                 cosmos.UseConnectionString(cfg.GetConnectionString("cosmos")!);
                 cosmos.UseDatabase("test");
                 cosmos.RegisterPolymorphicTypesFromAssemblyContaining<SampleEvent>();
-
                 cosmos.AddStream("packages");
-
                 cosmos.AddInMemoryPublisher();
-                //cosmos.AddProjection<IProjection>();
-
                 cosmos.ConfigureInfrastructure();
             });
         });
