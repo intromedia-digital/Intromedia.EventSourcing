@@ -57,14 +57,12 @@ public class ServiceCollectionExtensionsTests
         };
 
         await eventStore.AppendToStreamAsync("packages", id, [new SampleEvent {
-            StreamId = id,
             Id = Guid.NewGuid(),
             Version = 1,
             Name = "test"
         }]);
 
         await eventStore.AppendToStreamAsync("packages", id, [new SampleEvent {
-            StreamId = id,
             Id = Guid.NewGuid(),
             Version = 2,
             Name = "test 2"
@@ -94,14 +92,13 @@ public class ServiceCollectionExtensionsTests
 public class SampleEvent : IEvent
 {
     public string? Name { get; set; }
-    public Guid StreamId { get; init; }
     public Guid Id { get; init; }
     public int Version { get; init; }
 }
 
-public class SampleEventHandler : INotificationHandler<SampleEvent>
+public class SampleEventHandler : INotificationHandler<EventContext<SampleEvent>>
 {
-    public Task Handle(SampleEvent notification, CancellationToken cancellationToken)
+    public Task Handle(EventContext<SampleEvent> notification, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
@@ -113,7 +110,7 @@ public class SampleProjection : Projection
     {
     }
     public override string Name => "SampleProjection";
-    public override Task ApplyAsync(IEvent @event, CancellationToken cancellationToken = default)
+    public override Task ApplyAsync(Guid streamId, IEvent @event, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

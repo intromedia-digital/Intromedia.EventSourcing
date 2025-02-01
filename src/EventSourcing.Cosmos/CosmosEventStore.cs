@@ -1,5 +1,9 @@
 ﻿using Microsoft.Azure.Cosmos;
+using OneOf.Types;
+using OneOf;
+using System.Net;
 namespace EventSourcing.Cosmos;
+
 
 internal sealed class CosmosEventStore : IEventStore
 {
@@ -10,15 +14,27 @@ internal sealed class CosmosEventStore : IEventStore
         _cosmosClient = cosmosClient;
         _databaseId = databaseId;
     }
-    public async Task AppendToStreamAsync(string type, Guid streamId, IEnumerable<IEvent> events, CancellationToken cancellationToken = default)
+    public async Task<OneOf<Success, VersionMismatch, Unknown>> AppendToStreamAsync(string type, Guid streamId, IEnumerable<IEvent> events, CancellationToken cancellationToken = default)
     {
         var container = _cosmosClient.GetContainer(_databaseId, type);
-        var response = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>(
-            "appendEvent",
-            new PartitionKey(streamId.ToString()),
-            [events],
-            cancellationToken: cancellationToken
-        );
+        try
+        {
+            var response = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>(
+                "appendEvent",
+                new PartitionKey(streamId.ToString()),
+                [events.Select(e => CosmosEventData.FromEvent(e, streamId, type))],
+                cancellationToken: cancellationToken
+            );
+            return new Success();
+        }
+        catch (CosmosException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+        {
+            return VersionMismatch.Instance;
+        }
+        catch
+        {
+            return new Unknown();
+        }
     }
     public async Task<IEnumerable<IEvent>> ReadStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default)
     {
@@ -32,24 +48,24 @@ internal sealed class CosmosEventStore : IEventStore
             .WithParameter("@streamId", streamId.ToString())
             .WithParameter("@fromVersion", fromVersion);
 
-        var iterator = container.GetItemQueryIterator<IEvent>(query, requestOptions: new QueryRequestOptions
+        var iterator = container.GetItemQueryIterator<CosmosEventData>(query, requestOptions: new QueryRequestOptions
         {
             PartitionKey = new PartitionKey(streamId.ToString())
         });
-        List<IEvent> events = new();
+        List<CosmosEventData> events = new();
         while (iterator.HasMoreResults)
         {
-            FeedResponse<IEvent> response = await iterator.ReadNextAsync(cancellationToken);
+            FeedResponse<CosmosEventData> response = await iterator.ReadNextAsync(cancellationToken);
             events.AddRange(response);
         }
-        return events.OrderBy(e => e.Version);
+        return events.OrderBy(e => e.Version).Select(e => e.Data);
     }
     public async Task RemoveStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default)
     {
         var container = _cosmosClient.GetContainer(_databaseId, type);
-        
+
         ResponseMessage response = await container.DeleteAllItemsByPartitionKeyStreamAsync(
-            new PartitionKey(streamId.ToString()), 
+            new PartitionKey(streamId.ToString()),
             cancellationToken: cancellationToken
             );
 

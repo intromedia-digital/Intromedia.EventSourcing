@@ -1,4 +1,4 @@
 @EventSouring_HostAddress = https://localhost:7033
 
-GET {{EventSouring_HostAddress}}/packages
+GET {{EventSouring_HostAddress}}/packages?s=4a9fb641-833c-48d8-9cd7-bb943c0c05d1&v=2
 

@@ -1,6 +1,6 @@
 ﻿namespace EventSourcing;
 
-public abstract class Projection /*: IProjection*/
+public abstract class Projection 
 {
     protected readonly IServiceProvider ServiceProvider;
     public Projection(IServiceProvider serviceProvider)
@@ -8,5 +8,5 @@ public abstract class Projection /*: IProjection*/
         ServiceProvider = serviceProvider;
     }
     public abstract string Name { get; }
-    public abstract Task ApplyAsync(IEvent @event, CancellationToken cancellationToken = default);
+    public abstract Task ApplyAsync(Guid streamId, IEvent @event, CancellationToken cancellationToken = default);
 }

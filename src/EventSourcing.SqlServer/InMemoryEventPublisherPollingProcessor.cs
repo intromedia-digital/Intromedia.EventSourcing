@@ -60,8 +60,8 @@ where TProjection : Projection
             {
                 logger.LogInformation("No events processed for {ProjectionName}, checking startFrom date", projection.Name);
                 long? lastClusterKey = await dbConnection.QueryFirstOrDefaultAsync<long?>(
-                    "SELECT TOP 1 ClusterKey FROM Streams WHERE StreamType = @StreamType AND Created >= @Created ORDER BY ClusterKey",
-                    new { StreamType = "ALL", Created = startFrom }
+                    "SELECT TOP 1 ClusterKey FROM Streams WHERE Created >= @Created ORDER BY ClusterKey",
+                    new { Created = startFrom }
                 );
 
                 lastEvent = (lastClusterKey - 1) ?? -1;
@@ -93,7 +93,7 @@ where TProjection : Projection
 
             foreach (var @event in events)
             {
-                await projection.ApplyAsync(@event.ToEvent(jsonSerializerOptions));
+                await projection.ApplyAsync(@event.StreamId, @event.ToEvent(jsonSerializerOptions));
             }
 
 

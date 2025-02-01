@@ -1,29 +1,35 @@
 ﻿
 using Dapper;
+using Microsoft.Data.SqlClient;
+using OneOf;
+using OneOf.Types;
 using System.Data;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EventSourcing.SqlServer;
 internal sealed class SqlServerEventStore(DbConnectionFactory dbConnectionFactory, JsonSerializerOptions jsonSerializerOptions) : IEventStore
 {
-    public async Task AppendToStreamAsync(string type, Guid streamId, IEnumerable<IEvent> events, CancellationToken cancellationToken = default)
+    public async Task<OneOf<Success, VersionMismatch, Unknown>> AppendToStreamAsync(string type, Guid streamId, IEnumerable<IEvent> events, CancellationToken cancellationToken = default)
     {
-        // Make sure all events have the same stream id
-        if (!events.All(e => e.StreamId.Equals(streamId)))
-        {
-            throw new ArgumentException("All events must have the same stream id");
-        }
-
         using var dbConnection = dbConnectionFactory.CreateConnection();
-        List<SqlEventData> sqlEvents = events.Select(e => SqlEventData.FromEvent(e, type, jsonSerializerOptions)).ToList();
-        
-        await dbConnection.ExecuteAsync(
-            "INSERT INTO Streams (StreamType, Type, StreamId, Id, Version, Created, Data) VALUES (@StreamType, @Type, @StreamId, @Id, @Version, @Created, @Data)",
-            sqlEvents
-        );
-
-
+        List<SqlEventData> sqlEvents = events.Select(e => SqlEventData.FromEvent(e, streamId, type, jsonSerializerOptions)).ToList();
+        try
+        {
+            await dbConnection.ExecuteAsync(
+                "INSERT INTO Streams (StreamType, Type, StreamId, Id, Version, Created, Data) VALUES (@StreamType, @Type, @StreamId, @Id, @Version, @Created, @Data)",
+                sqlEvents
+            );
+            return new Success();
+        }
+        catch (SqlException e) when (e.Number == 2601 || e.Number == 2627)
+        {
+            return VersionMismatch.Instance;
+        }
+        catch
+        {
+            return new Unknown();
+        }
     }
     public async Task<IEnumerable<IEvent>> ReadStreamAsync(string type, Guid streamId, CancellationToken cancellationToken = default)
     {

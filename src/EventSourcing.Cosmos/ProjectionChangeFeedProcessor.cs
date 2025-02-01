@@ -13,7 +13,7 @@ DateTime startFrom
 : IHostedService
 where TProjection : Projection
 {
-    private readonly ChangeFeedProcessor _processor = container.GetChangeFeedProcessorBuilder<IEvent>(projection.Name, (changes, ct) => Handle(logger, projection, changes, ct))
+    private readonly ChangeFeedProcessor _processor = container.GetChangeFeedProcessorBuilder<CosmosEventData>(projection.Name, (changes, ct) => Handle(logger, projection, changes, ct))
             .WithInstanceName(Environment.MachineName)
             .WithLeaseContainer(leaseContainer)
             .WithMaxItems(1)
@@ -47,11 +47,11 @@ where TProjection : Projection
     }
     private async static Task Handle(ILogger<ProjectionChangeFeedProcessor<TProjection>> logger, TProjection projection, IReadOnlyCollection<object> changes, CancellationToken cancellationToken)
     {
-        foreach (IEvent change in changes.OfType<IEvent>())
+        foreach (CosmosEventData change in changes.OfType<CosmosEventData>())
         {
             try
             {
-                await projection.ApplyAsync(change, cancellationToken);
+                await projection.ApplyAsync(change.StreamId, change.Data, cancellationToken);
             }
             catch (Exception ex)
             {

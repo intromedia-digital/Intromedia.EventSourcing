@@ -20,11 +20,6 @@ public static class IEventValidator
             throw new ArgumentNullException(nameof(@event));
         }
 
-        if (@event.StreamId.Equals(Guid.Empty))
-        {
-            throw new ValidationException("StreamId is required");
-        }
-
         if (@event.Id.Equals(Guid.Empty))
         {
             throw new ValidationException("Id is required");

@@ -1,9 +1,8 @@
 ﻿using System.Reflection;
-using System.Text.Json;
 
-namespace EventSourcing.SqlServer;
+namespace EventSourcing.Cosmos;
 
-internal sealed class SqlEventData
+public sealed class CosmosEventData
 {
     
     public string Type { get; set; }
@@ -12,14 +11,10 @@ internal sealed class SqlEventData
     public Guid Id { get; set; }
     public int Version { get; set; }
     public DateTime Created { get; set; }
-    public string Data { get; set; }
-    public IEvent ToEvent(JsonSerializerOptions options)
+    public IEvent Data { get; set; }
+    public static CosmosEventData FromEvent(IEvent e, Guid streamId, string streamType)
     {
-        return JsonSerializer.Deserialize<IEvent>(Data, options) ?? throw new InvalidOperationException("Failed to deserialize event");
-    }
-    public static SqlEventData FromEvent(IEvent e, Guid streamId, string streamType, JsonSerializerOptions options)
-    {
-        return new SqlEventData
+        return new CosmosEventData
         {
             Type = e.GetType().GetCustomAttribute<EventNameAttribute>()?.EventName ?? throw new EventNameAttributeNotSet(e.GetType()),
             StreamType = streamType,
@@ -27,7 +22,7 @@ internal sealed class SqlEventData
             Id = e.Id,
             Version = e.Version,
             Created = DateTime.UtcNow,
-            Data = JsonSerializer.Serialize(e, options)
+            Data = e
         };
     }
 

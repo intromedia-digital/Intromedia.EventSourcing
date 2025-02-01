@@ -98,7 +98,7 @@ where TProjection : Projection
 
             foreach (var @event in events)
             {
-                await projection.ApplyAsync(@event.ToEvent(jsonSerializerOptions));
+                await projection.ApplyAsync(@event.StreamId, @event.ToEvent(jsonSerializerOptions));
             }
 
             logger.LogInformation("Processed {EventCount} events for {ProjectionName}", events.Count(), projection.Name);
