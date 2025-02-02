@@ -7,4 +7,5 @@ public interface IEvent
 {
     Guid Id { get; }
     int Version { get; }
+    DateTime Timestamp { get; }
 }

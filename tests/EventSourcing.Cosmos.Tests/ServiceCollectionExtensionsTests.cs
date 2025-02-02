@@ -92,8 +92,9 @@ public class ServiceCollectionExtensionsTests
 public class SampleEvent : IEvent
 {
     public string? Name { get; set; }
-    public Guid Id { get; init; }
+    public Guid Id { get; init; } = Guid.NewGuid();
     public int Version { get; init; }
+    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 }
 
 public class SampleEventHandler : INotificationHandler<EventContext<SampleEvent>>
